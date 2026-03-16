@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   if (!apiKey) return res.status(500).json({ error: "伺服器環境變數 GEMINI_API_KEY 未設定。" });
 
-  const modelId = "gemini-2.0";
+  const modelId = "gemini-2.5-pro";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
