@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS 與安全性設定
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -13,7 +12,7 @@ export default async function handler(req, res) {
 
   if (!apiKey) return res.status(500).json({ error: "伺服器環境變數 GEMINI_API_KEY 未設定。" });
 
-  const modelId = "gemini-2.5-flash";
+  const modelId = "gemini-2.0";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
@@ -22,7 +21,7 @@ export default async function handler(req, res) {
       systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         ...(generationConfig || {}),
-        maxOutputTokens: 4096, // 強制高上限，防止同理分析被切斷
+        maxOutputTokens: 4096,
         temperature: 0.75
       }
     };
@@ -36,11 +35,9 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      // 針對配額限制 (Rate Limit) 給予友善回傳
-      if (response.status === 429) {
-        return res.status(429).json({ error: "API 使用頻率過高，請稍等一分鐘後再點擊送出。" });
-      }
-      return res.status(response.status).json({ error: data.error?.message || "Google API 呼叫失敗" });
+      // 這裡會把 Google 傳回的具體錯誤 (例如 Daily Quota Exceeded) 傳給前端
+      const errMsg = data.error?.message || "Google API 呼叫失敗";
+      return res.status(response.status).json({ error: errMsg });
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
