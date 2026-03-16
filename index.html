@@ -80,13 +80,6 @@
 </style>
 </head>
 <body class="bg-stone-50 text-slate-800 h-screen flex flex-col overflow-hidden">
-<!-- Chosen Palette: Warm Sand & Deep Ocean Blue -->
-<!-- Application Structure Plan: 
-     1. 左欄：AI 對話區。
-     2. 右欄：冰山視覺化。
-     3. 代理架構：支持呼叫自定義的 Vercel 代理 API，以保護 API Key 安全。
--->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
 <header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-40">
     <div class="flex items-center gap-3">
@@ -201,10 +194,13 @@
 
 <script>
 /**
- * 薩提爾冰山探索核心邏輯 - 安全代理版
+ * 💡 開發者提示：
+ * 將 DEFAULT_PROXY_URL 修改為你的 Vercel API 網址，這樣 GitHub Pages 一打開就會預設連線。
  */
+const DEFAULT_PROXY_URL = ""; 
+
 const SOP_METADATA = [
-    { name: "行為與感受", promptGoal: "釐清發生了什麼事，識別應對姿態與情緒。", targetLayer: 1 },
+    { name: "行為與感受", promptGoal: "釐集發生了什麼事，識別應對姿態與情緒。", targetLayer: 1 },
     { name: "觀點與意義", promptGoal: "探索內在規條、假設。", targetLayer: 2 },
     { name: "挖掘期待", promptGoal: "找出未滿足的期待。", targetLayer: 3 },
     { name: "觸及渴望", promptGoal: "引導至愛、接納等核心渴望。", targetLayer: 4 },
@@ -217,7 +213,7 @@ let chartInstance = null;
 let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, resetBtn, stepIndicator;
 
 async function callGemini(userMessage) {
-    const proxyUrl = localStorage.getItem('SATIR_PROXY_URL');
+    const proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
     const directKey = localStorage.getItem('SATIR_APP_API_KEY');
 
     const systemInstruction = `你是一位精通「薩提爾成長模型」的資深心理教練。目前的步驟是：【${SOP_METADATA[currentStep].name}】。目標是：${SOP_METADATA[currentStep].promptGoal}。請給予反映式傾聽的同理回饋，一次只問一個問題。語言請使用繁體中文。`;
@@ -227,7 +223,6 @@ async function callGemini(userMessage) {
         { role: 'user', parts: [{ text: userMessage }] }
     ];
 
-    // 如果有 Proxy URL，優先使用 Proxy
     if (proxyUrl) {
         try {
             const response = await fetch(proxyUrl, {
@@ -243,7 +238,6 @@ async function callGemini(userMessage) {
         }
     }
 
-    // 否則回退到 Direct API Call (需要 Key)
     if (!directKey) return "⚠️ 請點擊設定⚙️，配置 Vercel 代理網址或 API Key。";
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${directKey}`;
@@ -332,8 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modal-settings');
     const proxyIn = document.getElementById('proxy-url-input');
     const keyIn = document.getElementById('api-key-input');
-    proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || "";
+    
+    proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
     keyIn.value = localStorage.getItem('SATIR_APP_API_KEY') || "";
+    
     document.getElementById('btn-settings').onclick = () => modal.classList.remove('hidden');
     document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
     document.getElementById('btn-modal-save').onclick = () => {
