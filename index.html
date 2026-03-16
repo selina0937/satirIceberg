@@ -173,7 +173,7 @@
         <h3 class="text-xl font-bold mb-4">⚙️ 安全連線設定</h3>
         <p class="text-sm text-stone-500 mb-6 leading-relaxed">
             如果是 Vercel 代理，網址請務必包含 <code class="bg-stone-100 px-1 text-red-500">/api/chat</code>。<br>
-            若出現 405 錯誤，代表網址不完整。
+            若出現 500 錯誤，通常是 Vercel 端環境變數設定有誤。
         </p>
         <div class="space-y-4">
             <div>
@@ -211,9 +211,7 @@ async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
     const directKey = localStorage.getItem('SATIR_APP_API_KEY');
 
-    // 自動校正常見的 405 錯誤 (網址缺少 /api/chat)
     if (proxyUrl && proxyUrl.startsWith('http') && !proxyUrl.includes('/api/')) {
-        console.warn("偵測到 Proxy URL 可能不完整，已嘗試自動補全路徑。");
         proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
     }
 
@@ -226,7 +224,6 @@ async function callGemini(userMessage) {
 
     if (proxyUrl) {
         try {
-            console.log("正在嘗試發送 POST 請求至:", proxyUrl);
             const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -234,26 +231,22 @@ async function callGemini(userMessage) {
                 mode: 'cors'
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                const errorDetail = await response.text();
-                console.error("代理伺服器回傳狀態:", response.status, errorDetail);
-                if (response.status === 405) {
-                    return `❌ 錯誤 405: 您的 Vercel URL 不接受 POST 請求。請確認網址末端是否包含 "/api/chat"？如果您直接填寫了域名而沒寫路徑，Vercel 會拒絕連線。`;
-                }
-                return `❌ 代理伺服器錯誤 (${response.status})。請檢查 Vercel 專案日誌。`;
+                console.error("伺服器回傳錯誤:", result);
+                return `❌ 代理伺服器錯誤 (${response.status}): ${result.error || "未知內部錯誤"}。請檢查 Vercel 環境變數 GEMINI_API_KEY。`;
             }
 
-            const result = await response.json();
             return result.text;
         } catch (err) {
-            console.error("Fetch 例外狀況:", err);
-            return `❌ 連線失敗: ${err.message}。請確認 Vercel 專案是否已成功部署並支援 HTTPS。`;
+            console.error("Fetch 例外:", err);
+            return `❌ 連線失敗: ${err.message}。請確認 Vercel 專案是否運作中。`;
         }
     }
 
     if (!directKey) return "⚠️ 請點擊設定⚙️，配置 Vercel 代理網址或 API Key。";
 
-    // Direct Fallback
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${directKey}`;
     try {
         const response = await fetch(url, {
@@ -354,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim());
         localStorage.setItem('SATIR_APP_API_KEY', keyIn.value.trim());
         modal.classList.add('hidden');
-        alert("設定已儲存！");
     };
     sendBtn.onclick = handleSend;
     resetBtn.onclick = () => location.reload();
