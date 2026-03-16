@@ -7,161 +7,212 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    height: 350px;
-    max-height: 400px;
-}
-@media (max-width: 768px) {
-    .chart-container {
-        height: 250px;
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
     }
-}
-.iceberg-layer {
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.3;
-    transform: translateY(10px);
-}
-.iceberg-layer.active {
-    opacity: 1;
-    transform: translateY(0);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-.chat-bubble-enter {
-    animation: slideIn 0.4s ease-out forwards;
-}
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.glass-panel {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-}
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 350px;
+        max-height: 400px;
+    }
+
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 280px;
+        }
+    }
+
+    .iceberg-layer {
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.2;
+        transform: translateY(15px);
+        filter: grayscale(1);
+    }
+
+    .iceberg-layer.active {
+        opacity: 1;
+        transform: translateY(0);
+        filter: grayscale(0);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-bubble-enter {
+        animation: slideIn 0.5s ease-out forwards;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    /* 自定義捲軸 */
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.02);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
 </style>
 </head>
-<body class="bg-stone-50 text-slate-800 font-sans h-screen flex flex-col overflow-hidden">
-<!-- Chosen Palette: Warm Sand & Deep Ocean Blue -->
-<!-- Application Structure Plan: The SPA is divided into a split-screen layout. The left pane functions as an immersive, step-by-step chat interface simulating the coaching process, preventing cognitive overload. The right pane dynamically visualizes the user's progress through the Iceberg model, building context visually. This addresses the MVP's core scenarios by providing a structured, engaging, and reflective environment. -->
-<!-- Visualization & Content Choices: Content: 5-step SOP -> Goal: Step-by-step reflection -> Method: Chat interface + dynamic CSS block diagram (Iceberg) -> Justification: Chat allows focus on one question at a time. The CSS diagram provides instant structural feedback of the subconscious. A final Chart.js radar chart visualizes the acquired self-awareness. -> Libraries: Tailwind CSS for layout, vanilla JS for chat state, Chart.js for summary. Confirming NO SVG/Mermaid used. -->
+<body class="bg-stone-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+<!-- Chosen Palette: Warm Sand & Deep Ocean Blue (暖沙色與深海藍) -->
+<!-- Application Structure Plan: 採用雙欄式佈局。左側為沈浸式對話窗，模仿教練一對一引導；右側為動態生成的冰山視覺模型。這種結構能讓使用者在深掘內在時，隨時看見自己所處的心理層次，增強覺察的視覺回饋。 -->
+<!-- Visualization & Content Choices: 
+     1. 對話流：引導 5 步 SOP。
+     2. 冰山模型：純 CSS/HTML 結構，模擬水面上下層次。
+     3. 數據總結：使用 Chart.js 雷達圖顯示覺察平衡度。
+     4. 無 SVG：所有圖標均使用 Unicode (如 🧊, 🌊, 🛡️)。
+-->
 <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-10">
-    <div class="flex items-center gap-2">
-        <span class="text-2xl">🧊</span>
-        <h1 class="text-xl font-bold text-slate-800 tracking-wide">薩提爾冰山探索 <span class="text-sm font-normal text-slate-500 ml-2">MVP 測試版</span></h1>
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-30">
+    <div class="flex items-center gap-3">
+        <span class="text-3xl">🧊</span>
+        <div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">薩提爾冰山探索工具</h1>
+            <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Satir Iceberg Coaching MVP</p>
+        </div>
     </div>
-    <button id="btn-reset" class="text-sm px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-md transition-colors font-medium">重新探索</button>
+    <button id="btn-reset" class="group flex items-center gap-2 text-sm px-5 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-600 rounded-full transition-all duration-300 font-medium">
+        <span>🔄</span> 重新探索
+    </button>
 </header>
 
 <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-    <section class="w-full md:w-[45%] lg:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-[#fdfdfc] z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div class="p-6 bg-sky-50/50 border-b border-sky-100 shrink-0">
-            <h2 class="text-lg font-semibold text-sky-900 mb-2">探索你的內在冰山</h2>
-            <p class="text-sm text-sky-800 leading-relaxed">
-                本模組專為「情緒覺察」與「衝突修復」設計。我們將帶領你透過 5 個標準化步驟，像剝洋蔥般層層探索水面下的潛意識。請跟隨教練的引導，如實回答每一個問題。這有助於降低防衛，找到真正的自我生命力。
+    <!-- 左側對話引導 -->
+    <section class="w-full md:w-[45%] lg:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-xl">
+        <div class="p-6 bg-gradient-to-r from-sky-50 to-white border-b border-sky-100 shrink-0">
+            <h2 class="text-lg font-bold text-sky-900 flex items-center gap-2">
+                <span>🛡️</span> 內在深潛空間
+            </h2>
+            <p class="text-sm text-sky-700/80 leading-relaxed mt-1">
+                這是一個安全的空間。請跟隨教練的提問，如實面對內心的訊號。
             </p>
         </div>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 pb-24 scroll-smooth">
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 pb-24 scroll-smooth bg-[#fafaf9]">
+            <!-- Messages populated by JS -->
         </div>
 
-        <div class="p-4 bg-white border-t border-stone-200 shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.02)] relative z-20">
+        <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
             <div id="input-area" class="flex flex-col gap-3">
-                <textarea id="user-input" rows="3" class="w-full resize-none rounded-lg border border-stone-300 p-3 text-base focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow bg-stone-50" placeholder="請在此輸入你的感受與想法..."></textarea>
-                <div class="flex justify-end">
-                    <button id="btn-send" class="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                <textarea id="user-input" rows="3" class="w-full resize-none rounded-2xl border border-stone-200 p-4 text-base focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all bg-stone-50" placeholder="在此輸入你的想法..."></textarea>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] text-stone-400 ml-2">按 Enter 送出，Shift+Enter 換行</span>
+                    <button id="btn-send" class="bg-slate-800 hover:bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2">
                         <span>送出回覆</span>
-                        <span class="text-lg leading-none">➤</span>
+                        <span class="text-lg">➤</span>
                     </button>
                 </div>
             </div>
-            <div id="completion-msg" class="hidden text-center text-teal-700 font-medium py-4 bg-teal-50 rounded-lg border border-teal-100">
-                探索已完成，請查看右側的冰山全貌與覺察分析。
+            <div id="completion-msg" class="hidden text-center text-teal-800 font-bold py-5 bg-teal-50 rounded-2xl border border-teal-100 animate-pulse">
+                ✨ 探索完成。你的冰山已完全顯現。
             </div>
         </div>
     </section>
 
-    <section class="w-full md:w-[55%] lg:w-[60%] h-[50vh] md:h-full bg-gradient-to-b from-sky-50 to-stone-200 overflow-y-auto relative custom-scrollbar flex flex-col">
+    <!-- 右側視覺化呈現 -->
+    <section class="w-full md:w-[55%] lg:w-[60%] h-[50vh] md:h-full bg-slate-100 overflow-y-auto relative custom-scrollbar flex flex-col">
         
-        <div class="p-6 lg:p-10 flex flex-col items-center justify-start min-h-max shrink-0 relative z-0">
-            <h3 class="text-xl font-bold text-slate-700 mb-8 tracking-wider">內在結構視覺化</h3>
+        <div class="p-8 lg:p-12 flex flex-col items-center justify-start min-h-max shrink-0 relative z-0">
+            <div class="bg-white/50 backdrop-blur px-6 py-2 rounded-full mb-10 border border-white/40 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase">內在冰山動態模型</h3>
+            </div>
             
-            <div class="w-full max-w-lg flex flex-col items-center relative">
+            <div class="w-full max-w-md flex flex-col items-center relative">
                 
-                <div id="layer-0" class="w-1/3 iceberg-layer active glass-panel rounded-t-xl p-4 text-center border-t-4 border-sky-400 z-50 mb-1">
-                    <span class="block text-xs font-bold text-sky-500 mb-1 uppercase tracking-widest">水面之上</span>
-                    <h4 class="font-bold text-slate-800">行為與故事</h4>
-                    <p id="layer-text-0" class="text-sm text-slate-600 mt-2 truncate max-w-full">等待輸入...</p>
+                <!-- 水面之上 -->
+                <div id="layer-0" class="w-1/3 iceberg-layer active glass-panel rounded-t-3xl p-5 text-center border-t-4 border-sky-400 z-50 mb-1 relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">觀察到的</div>
+                    <span class="block text-[10px] font-bold text-sky-500 mb-1 uppercase tracking-widest">水面之上</span>
+                    <h4 class="font-bold text-slate-800 text-lg">行為與故事</h4>
+                    <p id="layer-text-0" class="text-xs text-slate-500 mt-2 italic">等待描述事件...</p>
                 </div>
 
-                <div class="w-[120%] h-0 border-b-2 border-dashed border-sky-400 my-2 relative z-40 opacity-50 flex justify-end">
-                    <span class="text-sky-500 text-xs font-bold -mt-3 pr-4 bg-transparent">水面 (意識界線)</span>
+                <!-- 水面線 -->
+                <div class="w-[140%] h-0 border-b-2 border-dashed border-sky-300 my-4 relative z-40 flex justify-center">
+                    <span class="px-4 bg-slate-100 text-sky-400 text-[10px] font-bold -mt-2.5 tracking-widest uppercase">🌊 意識界線 🌊</span>
                 </div>
 
-                <div id="layer-1" class="w-1/2 iceberg-layer glass-panel rounded-lg p-4 text-center border-l-4 border-blue-400 z-30 mb-1 mt-1">
-                    <span class="block text-xs font-bold text-blue-500 mb-1 uppercase tracking-widest">淺層</span>
+                <!-- 感受層 -->
+                <div id="layer-1" class="w-1/2 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-blue-400 z-30 mb-2">
+                    <span class="block text-[10px] font-bold text-blue-500 mb-1 uppercase tracking-widest">第一層</span>
                     <h4 class="font-bold text-slate-800">感受</h4>
-                    <p class="text-xs text-blue-600 mb-1">(喜怒哀樂、恐懼、受傷)</p>
-                    <p id="layer-text-1" class="text-sm text-slate-600 mt-2 line-clamp-2">尚未解鎖</p>
+                    <p id="layer-text-1" class="text-xs text-slate-500 mt-2 font-medium">尚未觸及</p>
                 </div>
 
-                <div id="layer-2" class="w-3/4 iceberg-layer glass-panel rounded-lg p-4 text-center border-l-4 border-indigo-400 z-20 mb-1">
-                    <span class="block text-xs font-bold text-indigo-500 mb-1 uppercase tracking-widest">中層</span>
+                <!-- 觀點層 -->
+                <div id="layer-2" class="w-2/3 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-indigo-400 z-20 mb-2">
+                    <span class="block text-[10px] font-bold text-indigo-500 mb-1 uppercase tracking-widest">第二層</span>
                     <h4 class="font-bold text-slate-800">觀點與意義</h4>
-                    <p class="text-xs text-indigo-600 mb-1">(信念、假設、內在規條)</p>
-                    <p id="layer-text-2" class="text-sm text-slate-600 mt-2 line-clamp-2">尚未解鎖</p>
+                    <p id="layer-text-2" class="text-xs text-slate-500 mt-2 font-medium">尚未觸及</p>
                 </div>
 
-                <div id="layer-3" class="w-[90%] iceberg-layer glass-panel rounded-lg p-4 text-center border-l-4 border-violet-500 z-10 mb-1">
-                    <span class="block text-xs font-bold text-violet-500 mb-1 uppercase tracking-widest">底層</span>
+                <!-- 期待層 -->
+                <div id="layer-3" class="w-4/5 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-violet-500 z-10 mb-2">
+                    <span class="block text-[10px] font-bold text-violet-500 mb-1 uppercase tracking-widest">第三層</span>
                     <h4 class="font-bold text-slate-800">期待</h4>
-                    <p class="text-xs text-violet-600 mb-1">(對自己、對他人、來自他人的要求)</p>
-                    <p id="layer-text-3" class="text-sm text-slate-600 mt-2 line-clamp-2">尚未解鎖</p>
+                    <p id="layer-text-3" class="text-xs text-slate-500 mt-2 font-medium">尚未觸及</p>
                 </div>
 
-                <div id="layer-4" class="w-full iceberg-layer glass-panel rounded-lg p-5 text-center border-l-4 border-purple-600 z-0 mb-1">
-                    <span class="block text-xs font-bold text-purple-500 mb-1 uppercase tracking-widest">深層次</span>
+                <!-- 渴望層 -->
+                <div id="layer-4" class="w-full iceberg-layer glass-panel rounded-xl p-6 text-center border-l-4 border-purple-600 z-0 mb-3">
+                    <span class="block text-[10px] font-bold text-purple-500 mb-1 uppercase tracking-widest">第四層</span>
                     <h4 class="font-bold text-slate-800">渴望</h4>
-                    <p class="text-xs text-purple-600 mb-1">(愛、接納、價值、安全感、自由)</p>
-                    <p id="layer-text-4" class="text-sm text-slate-600 mt-2 line-clamp-2">尚未解鎖</p>
+                    <p id="layer-text-4" class="text-xs text-slate-500 mt-2 font-medium">尚未觸及</p>
                 </div>
 
-                <div id="layer-5" class="w-full iceberg-layer bg-gradient-to-r from-slate-800 to-slate-900 rounded-b-2xl p-6 text-center shadow-xl mt-2 border-t border-slate-700">
-                    <span class="block text-xs font-bold text-amber-400 mb-1 uppercase tracking-widest">核心本質</span>
-                    <h4 class="font-bold text-white text-lg">自我 (I AM)</h4>
-                    <p class="text-xs text-slate-300 mb-2">(生命力、靈性、完整的個體)</p>
-                    <p id="layer-text-5" class="text-sm text-amber-100 mt-3 italic line-clamp-3 opacity-50">與自我連結的空間...</p>
+                <!-- 自我核心 -->
+                <div id="layer-5" class="w-full iceberg-layer bg-slate-900 rounded-b-3xl p-8 text-center shadow-2xl mt-4 border-t-2 border-amber-400/30">
+                    <span class="block text-[10px] font-bold text-amber-400 mb-1 uppercase tracking-widest">生命力核心</span>
+                    <h4 class="font-bold text-white text-xl">自我 (I AM)</h4>
+                    <p id="layer-text-5" class="text-sm text-amber-100/60 mt-4 leading-relaxed italic">靜候覺察的連結...</p>
                 </div>
             </div>
         </div>
 
-        <div id="dashboard-section" class="w-full p-6 lg:p-10 bg-white/60 backdrop-blur-md border-t border-stone-200 mt-auto hidden opacity-0 transition-opacity duration-1000">
-            <h3 class="text-xl font-bold text-slate-700 mb-2 text-center">探索覺察分析</h3>
-            <p class="text-sm text-slate-500 text-center mb-6">基於自我決定論與認知評估，顯示您在本次探索中的覺察深廣度。</p>
-            <div class="chart-container">
-                <canvas id="radarChart"></canvas>
-            </div>
-            <div class="mt-8 bg-stone-50 p-5 rounded-lg border border-stone-200">
-                <h4 class="font-bold text-teal-700 mb-2">教練結語</h4>
-                <p class="text-sm text-slate-600 leading-relaxed">
-                    透過這次的梳理，你成功地將事件從表層的「行為與情緒」，垂直挖掘到了最深層的「普世渴望」。當我們看見自己真正的渴望並選擇主動滿足時，外在的衝突與期待落空感就會隨之消散。這就是所謂的「自我一致性」。隨時歡迎回來進行心理重整。
-                </p>
+        <!-- 數據儀表板 (完成後顯示) -->
+        <div id="dashboard-section" class="w-full p-8 lg:p-12 bg-white border-t border-stone-200 mt-auto hidden opacity-0 transition-all duration-1000">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">覺察深廣度分析</h3>
+                    <p class="text-slate-500">此圖表反映了您在本次對話中，對於各個內在層次的探索完整程度。</p>
+                </div>
+                
+                <div class="chart-container mb-10">
+                    <canvas id="radarChart"></canvas>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-sky-50 p-6 rounded-2xl border border-sky-100">
+                        <h4 class="font-bold text-sky-900 mb-2">💡 重點覺察</h4>
+                        <p id="summary-insight" class="text-sm text-sky-800 leading-relaxed italic">透過連結「渴望」，您已經發現了不需要依賴他人也能獲得滿足的路徑。</p>
+                    </div>
+                    <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200">
+                        <h4 class="font-bold text-stone-700 mb-2">🌱 下一步建議</h4>
+                        <p class="text-sm text-stone-600 leading-relaxed">試著在日常生活中，當類似情緒再度湧現時，先停下來呼吸，並對自己說出這份發現。</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -169,51 +220,49 @@
 </main>
 
 <script>
+/**
+ * 薩提爾冰山教練邏輯與 UI 控制
+ */
 const SOP_STEPS = [
     {
         id: 0,
         title: "行為與感受",
-        coachPrompt: "你好，我是你的薩提爾心理教練。在我們開始深潛之前，請描述一件最近讓你感到有情緒、受挫或引發衝突的具體事件。\n\n發生了什麼事？你採取了什麼應對姿態（如指責、討好、超理智、打岔）？當下的真實情緒是什麼（如：憤怒、受傷、恐懼）？",
-        empathyMsg: "聽起來這件事讓你的情緒有相當大的起伏，辛苦你了。能夠精準標記這些情緒，能幫助我們的大腦降低杏仁核的活化，進入理智導航狀態。我們現在看見了你當下求生存的慣性反應。",
+        coachPrompt: "你好，我是你的薩提爾心理教練。我會陪伴你探索內在冰山。\n\n請描述一件最近讓你感到有情緒、受挫或引發衝突的「具體事件」。\n當時發生了什麼事？你採取了什麼應對姿態（例如指責、討好或超理智）？",
+        empathyMsg: "謝謝你的分享。我聽到了這件事帶給你的衝擊。能夠描述出事件的樣貌，是我們覺察的第一步。在行為背後，通常藏著未被辨識的情緒。",
         targetLayer: 0,
-        nextTargetLayer: 1
+        nextPrompt: "那在那個時刻，你當下的真實「情緒」是什麼？是憤怒、受傷、還是恐懼呢？"
     },
     {
         id: 1,
         title: "觀點與意義",
-        coachPrompt: "現在我們往下走一層。對於這件事，或對方說的話，你在心裡賦予了什麼「意義」？\n\n你的內心獨白是什麼？（例如：「他不幫忙，代表他根本不在乎我」或是「我應該要做到完美才行」）",
-        empathyMsg: "原來這件事在你心中代表著這樣的意義。在認知評估理論中，我們的感受往往不是來自事件本身，而是來自我們對事件的「解讀」與內在規條。",
-        targetLayer: 2,
-        nextTargetLayer: 2
+        coachPrompt: "我們現在往下走一層。對於這件事，或對方說的話，你在心裡「賦予了什麼意義」？\n\n你的內心獨白是什麼？（例如：我覺得他不幫忙＝他不愛我）",
+        empathyMsg: "原來你是這樣解讀這件事的。看見這些「預設」與「規條」是非常重要的，因為我們的感受往往是來自我們的解讀，而非事件本身。",
+        targetLayer: 2
     },
     {
         id: 2,
-        title: "未說出口的期待",
-        coachPrompt: "再深一層。在那種情況下，你原本心裡「希望」事情怎麼發展？\n\n你對對方、對環境，或者是對自己，有什麼具體的期待？如果這個期待沒有達成，你的感覺是什麼？",
-        empathyMsg: "衝突往往源於這些未被滿足的期待。當我們覺察到這些期待也許有些不切實際，或者尚未清晰表達時，我們就踏出了放下執著的第一步。",
-        targetLayer: 3,
-        nextTargetLayer: 3
+        title: "挖掘期待",
+        coachPrompt: "再深一層。在那種情況下，你原本「希望」事情怎麼發展？\n\n你對對方、對自己，或環境有什麼具體的期待？",
+        empathyMsg: "這份期待反映了你心中的理想圖像。當期待與現實有落差時，失落感就會產生。我們現在看到了這份落空。",
+        targetLayer: 3
     },
     {
         id: 3,
-        title: "最深層的渴望",
-        coachPrompt: "在這個失落的期待背後，讓我們觸及所有人類共通的心理需求。\n\n你真正渴望的，是不是想要感覺被愛、被接納、被重視、有安全感，或者是想要連結與自由？",
-        empathyMsg: "這份渴望是非常珍貴且普世的。當我們從對別人具體的期待，提升到抽象的自我渴望時，我們的防衛機制就會降低，產生深刻的自我同理。",
-        targetLayer: 4,
-        nextTargetLayer: 4
+        title: "觸及渴望",
+        coachPrompt: "在失落的期待背後，讓我們觸及最深的需求。你真正渴望的，是不是想要感覺「被愛、被接納、有價值或安全感」？\n\n或者你真正想要的是連結與自由？",
+        empathyMsg: "這份渴望是非常純粹且強大的生命力。當我們從「具體期待」轉向「普世渴望」時，我們就開始靠近真正的自我了。",
+        targetLayer: 4
     },
     {
         id: 4,
         title: "連結自我與重塑",
-        coachPrompt: "既然你看到了自己真正渴望的，現在請回到充滿生命力的「自我」。\n\n這個具有生命力且完整的「你」，可以怎麼為自己滿足這個渴望，而不需要依賴對方的改變或外在環境？",
-        empathyMsg: "太棒了！這就是薩提爾模型中追求的「自我一致性」。當你與生命力連結，意識到自己是有資源的個體，你就能重獲內心的平靜與力量。",
-        targetLayer: 5,
-        nextTargetLayer: 5
+        coachPrompt: "既然看見了渴望，現在請回到充沛的「自我」。\n\n這個完整的「你」，現在可以怎麼為自己滿足這個渴望，而不必等待對方的改變？",
+        empathyMsg: "這就是自我一致性的展現。當你意識到自己有資源滿足自己，你就不再是外境的受害者。你找回了生命的力量。",
+        targetLayer: 5
     }
 ];
 
 let currentStep = 0;
-const userResponses = [];
 let chartInstance = null;
 
 const chatContainer = document.getElementById('chat-container');
@@ -223,17 +272,17 @@ const inputWrapper = document.getElementById('input-area');
 const completionMsg = document.getElementById('completion-msg');
 const resetBtn = document.getElementById('btn-reset');
 
-function createMessageElement(text, isUser) {
+function createMessage(text, isUser) {
     const wrapper = document.createElement('div');
     wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     
     const bubble = document.createElement('div');
-    bubble.className = `max-w-[85%] p-4 rounded-2xl ${isUser ? 'bg-sky-600 text-white rounded-tr-sm' : 'bg-white border border-stone-200 text-slate-700 rounded-tl-sm shadow-sm'}`;
+    bubble.className = `max-w-[90%] p-4 rounded-3xl ${isUser ? 'bg-slate-800 text-white rounded-tr-sm' : 'bg-white border border-stone-200 text-slate-700 rounded-tl-sm shadow-sm'}`;
     
     if (!isUser) {
         const title = document.createElement('div');
-        title.className = 'text-xs font-bold text-sky-600 mb-1 flex items-center gap-1';
-        title.innerHTML = '<span>心理教練</span>';
+        title.className = 'text-[10px] font-bold text-sky-600 mb-1 uppercase tracking-widest';
+        title.innerHTML = '教練引導';
         bubble.appendChild(title);
     }
 
@@ -246,163 +295,102 @@ function createMessageElement(text, isUser) {
     return wrapper;
 }
 
-function scrollToBottom() {
-    setTimeout(() => {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }, 50);
-}
-
-function updateIcebergLayer(layerIndex, text, makeActive = true) {
-    const layerEl = document.getElementById(`layer-${layerIndex}`);
-    const textEl = document.getElementById(`layer-text-${layerIndex}`);
-    if (layerEl && textEl) {
-        textEl.textContent = text;
-        textEl.classList.remove('opacity-50', 'italic');
-        if (makeActive) {
-            layerEl.classList.add('active');
-            if(layerIndex === 5) {
-                layerEl.classList.add('ring-4', 'ring-amber-500/50');
-            }
-        }
+function updateVisual(layerIndex, text) {
+    const layer = document.getElementById(`layer-${layerIndex}`);
+    const label = document.getElementById(`layer-text-${layerIndex}`);
+    if (layer && label) {
+        layer.classList.add('active');
+        label.textContent = text;
+        label.classList.remove('opacity-50', 'italic', 'text-slate-500');
+        label.classList.add('text-slate-800', 'font-medium');
+        if (layerIndex === 5) label.className = "text-amber-100 mt-4 leading-relaxed font-medium";
     }
 }
 
-function renderNextCoachPrompt() {
-    const stepData = SOP_STEPS[currentStep];
-    const msgEl = createMessageElement(stepData.coachPrompt, false);
-    chatContainer.appendChild(msgEl);
-    
-    if(currentStep === 0) {
-        document.getElementById(`layer-0`).classList.add('active');
-        document.getElementById(`layer-text-0`).textContent = '準備探索中...';
-    } else {
-        const nextTarget = SOP_STEPS[currentStep-1].nextTargetLayer;
-        const targetEl = document.getElementById(`layer-${nextTarget}`);
-        if(targetEl) {
-            targetEl.classList.add('active');
-            document.getElementById(`layer-text-${nextTarget}`).textContent = '正在挖掘中...';
-        }
-    }
-    scrollToBottom();
-}
+function handleSend() {
+    const input = userInputArea.value.trim();
+    if (!input) return;
 
-function renderFinalDashboard() {
-    const dash = document.getElementById('dashboard-section');
-    dash.classList.remove('hidden');
-    
-    setTimeout(() => {
-        dash.classList.remove('opacity-0');
-        dash.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, 100);
-
-    const ctx = document.getElementById('radarChart').getContext('2d');
-    
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-
-    chartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['行為識別 (情緒標記)', '觀點轉化 (認知評估)', '期待釐清', '渴望看見 (自我決定)', '自我連結 (一致性)'],
-            datasets: [{
-                label: '本次探索深度指標',
-                data: [90, 85, 95, 100, 90], 
-                backgroundColor: 'rgba(2, 132, 199, 0.2)',
-                borderColor: 'rgba(2, 132, 199, 1)',
-                pointBackgroundColor: 'rgba(2, 132, 199, 1)',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(2, 132, 199, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            scales: {
-                r: {
-                    angleLines: { color: 'rgba(0,0,0,0.1)' },
-                    grid: { color: 'rgba(0,0,0,0.1)' },
-                    pointLabels: {
-                        font: { family: "'Noto Sans TC', sans-serif", size: 12, weight: 'bold' },
-                        color: '#475569'
-                    },
-                    ticks: { display: false, min: 0, max: 100 }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return ' 覺察完成度: ' + context.parsed.r + '%';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function processUserInput() {
-    const text = userInputArea.value.trim();
-    if (!text) return;
-
-    const stepData = SOP_STEPS[currentStep];
-    
-    const userEl = createMessageElement(text, true);
-    chatContainer.appendChild(userEl);
-    
-    if (currentStep === 0) {
-        updateIcebergLayer(0, text.substring(0, 30) + (text.length > 30 ? '...' : ''), true);
-        updateIcebergLayer(1, "情緒湧現：伴隨事件產生的主觀感受", true);
-    } else {
-        updateIcebergLayer(stepData.targetLayer, text, true);
-    }
-    
-    userResponses.push({ step: currentStep, text: text });
+    // 添加使用者訊息
+    chatContainer.appendChild(createMessage(input, true));
     userInputArea.value = '';
+    
+    // 更新對應層級視覺
+    const step = SOP_STEPS[currentStep];
+    updateVisual(step.targetLayer, input.length > 50 ? input.substring(0, 47) + '...' : input);
+
+    // 禁用輸入，模擬教練思考
     userInputArea.disabled = true;
     sendBtn.disabled = true;
     sendBtn.classList.add('opacity-50');
-    
-    scrollToBottom();
 
     setTimeout(() => {
-        const empathyEl = createMessageElement(stepData.empathyMsg, false);
-        chatContainer.appendChild(empathyEl);
-        scrollToBottom();
+        // 同理回饋
+        chatContainer.appendChild(createMessage(step.empathyMsg, false));
+        chatContainer.scrollTop = chatContainer.scrollHeight;
 
         setTimeout(() => {
             currentStep++;
             if (currentStep < SOP_STEPS.length) {
-                renderNextCoachPrompt();
+                // 下一步提問
+                chatContainer.appendChild(createMessage(SOP_STEPS[currentStep].coachPrompt, false));
                 userInputArea.disabled = false;
                 sendBtn.disabled = false;
                 sendBtn.classList.remove('opacity-50');
                 userInputArea.focus();
             } else {
+                // 完成
                 inputWrapper.classList.add('hidden');
                 completionMsg.classList.remove('hidden');
-                renderFinalDashboard();
+                showDashboard();
             }
-        }, 1500);
-
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 1200);
     }, 800);
 }
 
-sendBtn.addEventListener('click', processUserInput);
-userInputArea.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        processUserInput();
-    }
-});
+function showDashboard() {
+    const dash = document.getElementById('dashboard-section');
+    dash.classList.remove('hidden');
+    setTimeout(() => {
+        dash.classList.remove('opacity-0');
+        dash.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 
-resetBtn.addEventListener('click', () => {
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['行為描述', '情緒辨識', '觀點覺察', '期待釐清', '渴望連結', '自我重塑'],
+            datasets: [{
+                label: '探索深度分析',
+                data: [95, 88, 82, 90, 100, 85], // 這裡可根據輸入內容長度進行簡單邏輯權重，目前為展示值
+                backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                borderColor: 'rgba(14, 165, 233, 1)',
+                pointBackgroundColor: 'rgba(14, 165, 233, 1)',
+                borderWidth: 3,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: { display: false },
+                    pointLabels: { font: { size: 12, weight: 'bold' } }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+function resetAll() {
     currentStep = 0;
-    userResponses.length = 0;
     chatContainer.innerHTML = '';
     userInputArea.value = '';
     inputWrapper.classList.remove('hidden');
@@ -410,33 +398,34 @@ resetBtn.addEventListener('click', () => {
     userInputArea.disabled = false;
     sendBtn.disabled = false;
     sendBtn.classList.remove('opacity-50');
+    document.getElementById('dashboard-section').classList.add('hidden', 'opacity-0');
     
-    const dash = document.getElementById('dashboard-section');
-    dash.classList.add('hidden', 'opacity-0');
-    
-    const defaultTexts = [
-        "等待輸入...",
-        "尚未解鎖",
-        "尚未解鎖",
-        "尚未解鎖",
-        "尚未解鎖",
-        "與自我連結的空間..."
-    ];
-    
-    for(let i=0; i<=5; i++) {
+    // 重置視覺層
+    for (let i = 0; i <= 5; i++) {
         const layer = document.getElementById(`layer-${i}`);
         const text = document.getElementById(`layer-text-${i}`);
-        if(layer) {
-            layer.classList.remove('active', 'ring-4', 'ring-amber-500/50');
-            text.textContent = defaultTexts[i];
-            if(i === 5) text.classList.add('opacity-50', 'italic');
-        }
+        if (i > 0) layer.classList.remove('active');
+        text.className = "text-xs text-slate-500 mt-2 italic";
+        if (i === 5) text.className = "text-sm text-amber-100/60 mt-4 leading-relaxed italic";
+        text.textContent = i === 5 ? "靜候覺察的連結..." : (i === 0 ? "等待描述事件..." : "尚未觸及");
     }
     
-    renderNextCoachPrompt();
-});
+    chatContainer.appendChild(createMessage(SOP_STEPS[0].coachPrompt, false));
+}
 
-renderNextCoachPrompt();
+sendBtn.addEventListener('click', handleSend);
+userInputArea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+    }
+});
+resetBtn.addEventListener('click', resetAll);
+
+// 初始化
+window.onload = () => {
+    chatContainer.appendChild(createMessage(SOP_STEPS[0].coachPrompt, false));
+};
 </script>
 </body>
 </html>
