@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>薩提爾冰山探索工具 - AI 專業教練版</title>
+<!-- 核心資源引用 -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    
+    body {
+        font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 350px;
+        max-height: 400px;
+    }
+
+    .iceberg-layer {
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.2;
+        transform: translateY(15px);
+        filter: grayscale(1);
+    }
+
+    .iceberg-layer.active {
+        opacity: 1;
+        transform: translateY(0);
+        filter: grayscale(0);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-bubble-enter {
+        animation: slideIn 0.5s ease-out forwards;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .typing-indicator span {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background: #94a3b8;
+        border-radius: 50%;
+        animation: blink 1s infinite;
+        margin: 0 1px;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+    .modal-overlay {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+    }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+<!-- Chosen Palette: Warm Sand & Deep Ocean Blue -->
+<!-- Application Structure Plan: 
+     1. 左欄：AI 對話區。
+     2. 右欄：冰山視覺化。
+     3. 代理架構：支持呼叫自定義的 Vercel 代理 API，以保護 API Key 安全。
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-40">
+    <div class="flex items-center gap-3">
+        <span class="text-3xl">🧊</span>
+        <div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">薩提爾冰山探索工具 <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded ml-2">Secure AI</span></h1>
+            <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Proxy Enabled Version</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="btn-settings" class="p-2 hover:bg-stone-100 rounded-full transition-colors" title="API 設定">
+            <span>⚙️</span>
+        </button>
+        <button id="btn-reset" class="group flex items-center gap-2 text-sm px-5 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-600 rounded-full transition-all duration-300 font-medium">
+            <span>🔄</span> 重新探索
+        </button>
+    </div>
+</header>
+
+<main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+    <section class="w-full md:w-[45%] lg:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-xl">
+        <div class="p-6 bg-gradient-to-r from-sky-50 to-white border-b border-sky-100 shrink-0">
+            <h2 class="text-lg font-bold text-sky-900 flex items-center gap-2">
+                <span>🛡️</span> AI 心理教練引導
+            </h2>
+            <p class="text-sm text-sky-700/80 leading-relaxed mt-1">對話將透過安全代理進行分析。</p>
+        </div>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 pb-24 scroll-smooth bg-[#fafaf9]"></div>
+
+        <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
+            <div id="input-area" class="flex flex-col gap-3">
+                <textarea id="user-input" rows="3" class="w-full resize-none rounded-2xl border border-stone-200 p-4 text-base focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all bg-stone-50 shadow-inner" placeholder="在此輸入您的真實回應..."></textarea>
+                <div class="flex justify-between items-center">
+                    <span id="step-indicator" class="text-[11px] text-sky-600 font-bold ml-2">步驟 1/5：事件與感受</span>
+                    <button id="btn-send" class="bg-slate-800 hover:bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                        <span>送出</span>
+                        <span class="text-lg">➤</span>
+                    </button>
+                </div>
+            </div>
+            <div id="completion-msg" class="hidden text-center text-teal-800 font-bold py-5 bg-teal-50 rounded-2xl border border-teal-100">
+                ✨ 探索完成。你的冰山已完全顯現。
+            </div>
+        </div>
+    </section>
+
+    <section class="w-full md:w-[55%] lg:w-[60%] h-[50vh] md:h-full bg-slate-100 overflow-y-auto relative custom-scrollbar flex flex-col">
+        <div class="px-8 lg:px-12 flex flex-col items-center justify-start min-h-max shrink-0 relative z-0 pb-20 mt-10">
+            <div class="w-full max-w-md flex flex-col items-center relative">
+                <div id="layer-0" class="w-1/3 iceberg-layer active glass-panel rounded-t-3xl p-5 text-center border-t-4 border-sky-400 z-50 mb-1 relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">行為與應對</div>
+                    <p id="layer-text-0" class="text-xs text-slate-500 mt-2 italic truncate">等待觀察...</p>
+                </div>
+                <div class="w-[140%] h-0 border-b-2 border-dashed border-sky-300 my-4 relative z-40 flex justify-center">
+                    <span class="px-4 bg-slate-100 text-sky-400 text-[10px] font-bold -mt-2.5 tracking-widest uppercase">🌊 意識界線 🌊</span>
+                </div>
+                <div id="layer-1" class="w-1/2 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-blue-400 z-30 mb-2">
+                    <h4 class="font-bold text-slate-800 text-xs">感受</h4>
+                    <p id="layer-text-1" class="text-[10px] text-slate-500 mt-1">尚未觸及</p>
+                </div>
+                <div id="layer-2" class="w-2/3 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-indigo-400 z-20 mb-2">
+                    <h4 class="font-bold text-slate-800 text-xs">觀點與意義</h4>
+                    <p id="layer-text-2" class="text-[10px] text-slate-500 mt-1">尚未觸及</p>
+                </div>
+                <div id="layer-3" class="w-4/5 iceberg-layer glass-panel rounded-xl p-4 text-center border-l-4 border-violet-500 z-10 mb-2">
+                    <h4 class="font-bold text-slate-800 text-xs">期待</h4>
+                    <p id="layer-text-3" class="text-[10px] text-slate-500 mt-1">尚未觸及</p>
+                </div>
+                <div id="layer-4" class="w-full iceberg-layer glass-panel rounded-xl p-6 text-center border-l-4 border-purple-600 z-0 mb-3">
+                    <h4 class="font-bold text-slate-800 text-xs">渴望</h4>
+                    <p id="layer-text-4" class="text-[10px] text-slate-500 mt-1">尚未觸及</p>
+                </div>
+                <div id="layer-5" class="w-full iceberg-layer bg-slate-900 rounded-b-3xl p-8 text-center shadow-2xl mt-4 border-t-2 border-amber-400/30">
+                    <h4 class="font-bold text-white text-base">自我 (I AM)</h4>
+                    <p id="layer-text-5" class="text-xs text-amber-100/60 mt-2 italic">靜候覺察...</p>
+                </div>
+            </div>
+        </div>
+        <div id="dashboard-section" class="w-full p-8 lg:p-12 bg-white border-t border-stone-200 mt-auto hidden opacity-0 transition-all duration-1000">
+            <div class="max-w-2xl mx-auto">
+                <div class="chart-container mb-10"><canvas id="radarChart"></canvas></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- API Proxy Settings Modal -->
+<div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+        <h3 class="text-xl font-bold mb-4">⚙️ 安全連線設定</h3>
+        <p class="text-sm text-stone-500 mb-6 leading-relaxed">
+            為了安全起見，建議使用 Vercel 代理網址。如果您沒有代理，也可以直接輸入 Gemini API Key（不建議在公開 GitHub 使用）。
+        </p>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Vercel Proxy URL (優先)</label>
+                <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="https://your-app.vercel.app/api/chat">
+            </div>
+            <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-stone-100"></div></div><div class="relative flex justify-center text-[10px] uppercase"><span class="bg-white px-2 text-stone-300">或直接使用 Key (危險)</span></div></div>
+            <div>
+                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Gemini API Key</label>
+                <input type="password" id="api-key-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="在此貼上您的金鑰...">
+            </div>
+            <div class="flex gap-2 justify-end mt-6">
+                <button id="btn-modal-close" class="px-6 py-2 text-stone-400 font-bold">關閉</button>
+                <button id="btn-modal-save" class="px-6 py-2 bg-sky-600 text-white rounded-full font-bold shadow-lg">儲存設定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * 薩提爾冰山探索核心邏輯 - 安全代理版
+ */
+const SOP_METADATA = [
+    { name: "行為與感受", promptGoal: "釐清發生了什麼事，識別應對姿態與情緒。", targetLayer: 1 },
+    { name: "觀點與意義", promptGoal: "探索內在規條、假設。", targetLayer: 2 },
+    { name: "挖掘期待", promptGoal: "找出未滿足的期待。", targetLayer: 3 },
+    { name: "觸及渴望", promptGoal: "引導至愛、接納等核心渴望。", targetLayer: 4 },
+    { name: "連結自我與重塑", promptGoal: "思考如何滿足渴望。", targetLayer: 5 }
+];
+
+let currentStep = 0;
+let chatHistory = [];
+let chartInstance = null;
+let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, resetBtn, stepIndicator;
+
+async function callGemini(userMessage) {
+    const proxyUrl = localStorage.getItem('SATIR_PROXY_URL');
+    const directKey = localStorage.getItem('SATIR_APP_API_KEY');
+
+    const systemInstruction = `你是一位精通「薩提爾成長模型」的資深心理教練。目前的步驟是：【${SOP_METADATA[currentStep].name}】。目標是：${SOP_METADATA[currentStep].promptGoal}。請給予反映式傾聽的同理回饋，一次只問一個問題。語言請使用繁體中文。`;
+
+    const contents = [
+        ...chatHistory.map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] })),
+        { role: 'user', parts: [{ text: userMessage }] }
+    ];
+
+    // 如果有 Proxy URL，優先使用 Proxy
+    if (proxyUrl) {
+        try {
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents, systemInstruction })
+            });
+            if (!response.ok) throw new Error("Proxy Error");
+            const result = await response.json();
+            return result.text;
+        } catch (err) {
+            return "❌ 代理伺服器連線失敗。請檢查網址或 Vercel 狀態。";
+        }
+    }
+
+    // 否則回退到 Direct API Call (需要 Key)
+    if (!directKey) return "⚠️ 請點擊設定⚙️，配置 Vercel 代理網址或 API Key。";
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${directKey}`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: systemInstruction + "\n\n使用者輸入：" + userMessage }] }] })
+        });
+        const result = await response.json();
+        return result.candidates?.[0]?.content?.parts?.[0]?.text || "連線錯誤。";
+    } catch (err) {
+        return "❌ 直接呼叫 API 失敗。";
+    }
+}
+
+function createMessage(text, isUser) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[90%] p-4 rounded-3xl ${isUser ? 'bg-slate-800 text-white rounded-tr-sm' : 'bg-white border border-stone-200 text-slate-700 rounded-tl-sm shadow-sm'}`;
+    if (!isUser) {
+        const title = document.createElement('div');
+        title.className = 'text-[10px] font-bold text-sky-600 mb-1 uppercase tracking-widest';
+        title.innerHTML = 'AI 專業教練';
+        bubble.appendChild(title);
+    }
+    const content = document.createElement('div');
+    content.className = 'whitespace-pre-wrap leading-relaxed text-[15px]';
+    content.textContent = text;
+    bubble.appendChild(content);
+    wrapper.appendChild(bubble);
+    return wrapper;
+}
+
+function createTypingIndicator() {
+    const wrapper = document.createElement('div');
+    wrapper.id = 'typing-indicator';
+    wrapper.className = 'flex justify-start chat-bubble-enter';
+    wrapper.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+    return wrapper;
+}
+
+async function handleSend() {
+    const input = userInputArea.value.trim();
+    if (!input) return;
+    chatContainer.appendChild(createMessage(input, true));
+    chatHistory.push({ role: "user", text: input });
+    userInputArea.value = '';
+    userInputArea.disabled = true;
+    sendBtn.disabled = true;
+    const typing = createTypingIndicator();
+    chatContainer.appendChild(typing);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    const coachResponse = await callGemini(input);
+    typing.remove();
+    chatContainer.appendChild(createMessage(coachResponse, false));
+    chatHistory.push({ role: "coach", text: coachResponse });
+    if (!coachResponse.startsWith("⚠️") && !coachResponse.startsWith("❌")) {
+        const layer = document.getElementById(`layer-${SOP_METADATA[currentStep].targetLayer}`);
+        const label = document.getElementById(`layer-text-${SOP_METADATA[currentStep].targetLayer}`);
+        layer.classList.add('active');
+        label.textContent = "已獲取深度覺察";
+        currentStep++;
+    }
+    if (currentStep < SOP_METADATA.length) {
+        stepIndicator.textContent = `步驟 ${currentStep + 1}/5：${SOP_METADATA[currentStep].name}`;
+        userInputArea.disabled = false;
+        sendBtn.disabled = false;
+        userInputArea.focus();
+    } else {
+        inputWrapper.classList.add('hidden');
+        completionMsg.classList.remove('hidden');
+    }
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    chatContainer = document.getElementById('chat-container');
+    userInputArea = document.getElementById('user-input');
+    sendBtn = document.getElementById('btn-send');
+    inputWrapper = document.getElementById('input-area');
+    completionMsg = document.getElementById('completion-msg');
+    resetBtn = document.getElementById('btn-reset');
+    stepIndicator = document.getElementById('step-indicator');
+    const modal = document.getElementById('modal-settings');
+    const proxyIn = document.getElementById('proxy-url-input');
+    const keyIn = document.getElementById('api-key-input');
+    proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || "";
+    keyIn.value = localStorage.getItem('SATIR_APP_API_KEY') || "";
+    document.getElementById('btn-settings').onclick = () => modal.classList.remove('hidden');
+    document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
+    document.getElementById('btn-modal-save').onclick = () => {
+        localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim());
+        localStorage.setItem('SATIR_APP_API_KEY', keyIn.value.trim());
+        modal.classList.add('hidden');
+    };
+    sendBtn.onclick = handleSend;
+    resetBtn.onclick = () => location.reload();
+    chatContainer.appendChild(createMessage("你好，我是你的薩提爾心理教練。請描述一件最近讓你感到有情緒、受挫或引發衝突的具體事件，當時發生了什麼事？", false));
+});
+</script>
+</body>
+</html>
