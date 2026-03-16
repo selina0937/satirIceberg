@@ -172,16 +172,15 @@
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
         <h3 class="text-xl font-bold mb-4">⚙️ 安全連線設定</h3>
         <p class="text-sm text-stone-500 mb-6 leading-relaxed">
-            為了安全起見，建議使用 Vercel 代理網址。如果您沒有代理，也可以直接輸入 Gemini API Key（不建議在公開 GitHub 使用）。
+            建議填寫 Vercel 代理網址（如：https://.../api/chat）。若連線失敗，請按 F12 檢查瀏覽器主控台。
         </p>
         <div class="space-y-4">
             <div>
-                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Vercel Proxy URL (優先)</label>
+                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Vercel Proxy URL</label>
                 <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="https://your-app.vercel.app/api/chat">
             </div>
-            <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-stone-100"></div></div><div class="relative flex justify-center text-[10px] uppercase"><span class="bg-white px-2 text-stone-300">或直接使用 Key (危險)</span></div></div>
             <div>
-                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Gemini API Key</label>
+                <label class="block text-xs font-bold text-stone-400 uppercase mb-2">Gemini API Key (選填備用)</label>
                 <input type="password" id="api-key-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="在此貼上您的金鑰...">
             </div>
             <div class="flex gap-2 justify-end mt-6">
@@ -193,14 +192,10 @@
 </div>
 
 <script>
-/**
- * 💡 開發者提示：
- * 將 DEFAULT_PROXY_URL 修改為你的 Vercel API 網址，這樣 GitHub Pages 一打開就會預設連線。
- */
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/"; 
 
 const SOP_METADATA = [
-    { name: "行為與感受", promptGoal: "釐集發生了什麼事，識別應對姿態與情緒。", targetLayer: 1 },
+    { name: "行為與感受", promptGoal: "釐清發生了什麼事，識別應對姿態與情緒。", targetLayer: 1 },
     { name: "觀點與意義", promptGoal: "探索內在規條、假設。", targetLayer: 2 },
     { name: "挖掘期待", promptGoal: "找出未滿足的期待。", targetLayer: 3 },
     { name: "觸及渴望", promptGoal: "引導至愛、接納等核心渴望。", targetLayer: 4 },
@@ -209,7 +204,6 @@ const SOP_METADATA = [
 
 let currentStep = 0;
 let chatHistory = [];
-let chartInstance = null;
 let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, resetBtn, stepIndicator;
 
 async function callGemini(userMessage) {
@@ -225,21 +219,31 @@ async function callGemini(userMessage) {
 
     if (proxyUrl) {
         try {
+            console.log("正在發送請求至代理伺服器:", proxyUrl);
             const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents, systemInstruction })
+                body: JSON.stringify({ contents, systemInstruction }),
+                mode: 'cors'
             });
-            if (!response.ok) throw new Error("Proxy Error");
+
+            if (!response.ok) {
+                const errorDetail = await response.text();
+                console.error("代理伺服器回傳錯誤:", response.status, errorDetail);
+                return `❌ 代理伺服器回傳錯誤 (${response.status})。請檢查 Vercel 專案日誌。`;
+            }
+
             const result = await response.json();
             return result.text;
         } catch (err) {
-            return "❌ 代理伺服器連線失敗。請檢查網址或 Vercel 狀態。";
+            console.error("連線過程發生例外狀況:", err);
+            return `❌ 代理伺服器連線失敗。原因：${err.message}。請確認網址是否正確且支援 HTTPS。`;
         }
     }
 
     if (!directKey) return "⚠️ 請點擊設定⚙️，配置 Vercel 代理網址或 API Key。";
 
+    // Direct Call Fallback
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${directKey}`;
     try {
         const response = await fetch(url, {
@@ -250,6 +254,7 @@ async function callGemini(userMessage) {
         const result = await response.json();
         return result.candidates?.[0]?.content?.parts?.[0]?.text || "連線錯誤。";
     } catch (err) {
+        console.error("直接呼叫 API 失敗:", err);
         return "❌ 直接呼叫 API 失敗。";
     }
 }
@@ -292,17 +297,21 @@ async function handleSend() {
     const typing = createTypingIndicator();
     chatContainer.appendChild(typing);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+    
     const coachResponse = await callGemini(input);
+    
     typing.remove();
     chatContainer.appendChild(createMessage(coachResponse, false));
     chatHistory.push({ role: "coach", text: coachResponse });
-    if (!coachResponse.startsWith("⚠️") && !coachResponse.startsWith("❌")) {
+    
+    if (!coachResponse.includes("❌") && !coachResponse.includes("⚠️")) {
         const layer = document.getElementById(`layer-${SOP_METADATA[currentStep].targetLayer}`);
         const label = document.getElementById(`layer-text-${SOP_METADATA[currentStep].targetLayer}`);
         layer.classList.add('active');
         label.textContent = "已獲取深度覺察";
         currentStep++;
     }
+    
     if (currentStep < SOP_METADATA.length) {
         stepIndicator.textContent = `步驟 ${currentStep + 1}/5：${SOP_METADATA[currentStep].name}`;
         userInputArea.disabled = false;
@@ -336,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim());
         localStorage.setItem('SATIR_APP_API_KEY', keyIn.value.trim());
         modal.classList.add('hidden');
+        alert("設定已儲存！");
     };
     sendBtn.onclick = handleSend;
     resetBtn.onclick = () => location.reload();
