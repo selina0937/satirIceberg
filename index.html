@@ -75,7 +75,7 @@
         background-color: #fffbeb;
     }
 
-    /* PDF 匯出專用樣式 - 專業圖像化呈現 */
+    /* PDF 匯出專用樣式 - 專業圖像化分頁 */
     @media print {
         .no-print { display: none !important; }
         html, body { 
@@ -100,15 +100,14 @@
         #chat-container { 
             height: auto !important;
             overflow: visible !important;
-            display: block !important;
         }
         .visual-layer { 
             opacity: 1 !important; 
             filter: none !important; 
             transform: none !important; 
             break-inside: avoid;
-            margin-bottom: 30px !important;
-            border: 2px solid #333 !important;
+            margin-bottom: 25px !important;
+            border: 2px solid #000 !important;
             padding: 20px !important;
             display: block !important;
         }
@@ -120,15 +119,16 @@
         .glass-panel {
             background: #fff !important;
             box-shadow: none !important;
-            border: 2px solid #333 !important;
+            border: 2px solid #000 !important;
         }
         .visual-layer p {
             color: #000 !important;
             font-style: normal !important;
             font-weight: bold !important;
+            line-height: 1.5;
         }
         h1, h2, h3, h4 { color: black !important; margin-bottom: 10px !important; }
-        #iceberg-visual {
+        #iceberg-visual, #alchemy-visual {
             display: block !important;
             width: 100% !important;
         }
@@ -136,7 +136,7 @@
             width: 100% !important;
             max-width: 100% !important;
         }
-        .print-title { display: block !important; text-align: center; margin-bottom: 2cm; }
+        .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 2px solid #000; padding-bottom: 10px; }
     }
     .print-title { display: none; }
 </style>
@@ -159,7 +159,7 @@
             <span>📄</span> 匯出完整報告
         </button>
         <button id="btn-reset" class="group flex items-center gap-2 text-sm px-4 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-600 rounded-full transition-all duration-300 font-medium border border-stone-200">
-            <span>🔄</span> 重置
+            <span>🔄</span> 重置系統
         </button>
     </div>
 </header>
@@ -240,7 +240,7 @@
         <div id="alchemy-visual" class="hidden p-8 lg:p-12 flex flex-col items-center">
             <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 w-full max-w-2xl shadow-sm mb-8 no-print">
                 <h3 class="text-amber-800 font-bold mb-4 flex items-center gap-2 text-lg">
-                    <span>🧪</span> 自尊維護工具箱
+                    <span>🧪</span> 自尊維護工具箱 (點擊圖示提取資源)
                 </h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="tool-card bg-white border border-stone-100 p-4 rounded-2xl text-center shadow-sm" onclick="selectTool('偵探帽')">
@@ -280,19 +280,19 @@
             
             <div id="alchemy-progress" class="w-full max-w-2xl space-y-4">
                 <div id="alchemy-step-1" class="visual-layer glass-panel p-5 rounded-3xl border-l-4 border-amber-500">
-                    <h4 class="font-bold text-amber-800 text-sm mb-1 uppercase tracking-widest">Step 1：陰影接納</h4>
+                    <h4 class="font-bold text-amber-800 text-sm mb-1 uppercase tracking-widest">Step 1：陰影接納與重新撫育</h4>
                     <p id="alchemy-text-1" class="text-xs text-stone-500 italic line-clamp-3">尚未開始...</p>
                 </div>
                 <div id="alchemy-step-2" class="visual-layer glass-panel p-5 rounded-3xl border-l-4 border-orange-500">
-                    <h4 class="font-bold text-orange-800 text-sm mb-1 uppercase tracking-widest">Step 2：資源提取</h4>
-                    <p id="alchemy-text-2" class="text-xs text-stone-500 italic line-clamp-3">尚未選擇...</p>
+                    <h4 class="font-bold text-orange-800 text-sm mb-1 uppercase tracking-widest">Step 2：心理資源提取</h4>
+                    <p id="alchemy-text-2" class="text-xs text-stone-500 italic line-clamp-3">尚未選擇工具...</p>
                 </div>
                 <div id="alchemy-step-3" class="visual-layer glass-panel p-5 rounded-3xl border-l-4 border-red-500">
-                    <h4 class="font-bold text-red-800 text-sm mb-1 uppercase tracking-widest">Step 3：視角切換</h4>
-                    <p id="alchemy-text-3" class="text-xs text-stone-500 italic line-clamp-3">尚未觀察...</p>
+                    <h4 class="font-bold text-red-800 text-sm mb-1 uppercase tracking-widest">Step 3：NLP 感知位置切換</h4>
+                    <p id="alchemy-text-3" class="text-xs text-stone-500 italic line-clamp-3">尚未進入觀察...</p>
                 </div>
                 <div id="alchemy-step-4" class="visual-layer bg-slate-800 p-6 rounded-3xl shadow-xl">
-                    <h4 class="font-bold text-amber-400 text-sm mb-2 uppercase tracking-widest">Step 4：行動腳本</h4>
+                    <h4 class="font-bold text-amber-400 text-sm mb-2 uppercase tracking-widest">Step 4：未來一致性行動腳本</h4>
                     <div id="alchemy-text-4" class="text-xs text-white leading-relaxed whitespace-pre-wrap italic line-clamp-6">生成中...</div>
                 </div>
             </div>
@@ -301,13 +301,17 @@
 </main>
 
 <script>
+/**
+ * 薩提爾全效工具：邏輯與連線控制
+ * 注意：請務必填寫下方的 DEFAULT_PROXY_URL
+ */
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
 const MODES = { ICEBERG: 'ICEBERG', ALCHEMY: 'ALCHEMY' };
 
 const STAGES = {
     ICEBERG: [
-        { id: 0, name: "行為與感受", question: "當時發生了什麼事？您採取了什麼應對姿態（指責/討好/超理智/打岔）？當下的真實情緒是什麼？", targetLayer: 1 },
+        { id: 0, name: "釐清行為與感受", question: "當時發生了什麼事？您採取了什麼應對姿態（指責/討好/超理智/打岔）？當下的真實情緒是什麼？", targetLayer: 1 },
         { id: 1, name: "探索觀點與意義", question: "關於這件事，您在心裡賦予了什麼意義？您的內心獨白或規條是什麼？", targetLayer: 2 },
         { id: 2, name: "挖掘未說出的期待", question: "在那種情況下，您心裡原本『希望』事情怎麼發展？您對對方或對自己有什麼具體期待？", targetLayer: 3 },
         { id: 3, name: "觸及核心渴望", question: "在這個失落背後，您真正渴望的，是否是想感覺被重視、被接納、有安全感，或者是想要連結？", targetLayer: 4 },
@@ -329,9 +333,15 @@ let discoveredYearning = "";
 
 let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, resetBtn, stepIndicator, coachHeader;
 
+// 核心發送函數，強化錯誤處理防止鎖死
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-    if (proxyUrl && proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
+    
+    if (!proxyUrl || proxyUrl === "") {
+        return "⚠️ 請在代碼中配置您的 Vercel DEFAULT_PROXY_URL 網址以啟動 AI 教練。";
+    }
+
+    if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
         proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
     }
 
@@ -339,21 +349,14 @@ async function callGemini(userMessage) {
     if (currentMode === MODES.ICEBERG) {
         const stage = STAGES.ICEBERG[currentStep];
         systemInstruction = `你是一位精通薩提爾成長模型的資深心理教練。引導使用者進行冰山深潛。
-${stage.isSummary ? "【關鍵指令】這是總結階段。請不要提問。請根據對話，針對冰山的六個層次進行深刻、溫暖且專業的整合分析。點出其內在資源。最後恭喜完成。" : "指令：先給予深刻的情緒反映同理，分析其姿態，然後務必精準提出這個問題：" + stage.question}
-語言：繁體中文。請確保語句絕對完整，不可斷掉。`;
+${stage.isSummary ? "【關鍵指令】這是總結階段。不要提問。請根據對話，針對冰山的六個層次進行深刻、溫暖且專業的整合分析。點出其內在生命力資源。最後祝賀完成。" : "指令：先給予深刻的情緒反映同理，分析其姿態，然後務必精準提出這個問題：" + stage.question}
+語言：繁體中文。請確保語句絕對完整且專業，不可在中途斷掉。`;
     } else {
         const stage = STAGES.ALCHEMY[currentStep];
-        systemInstruction = `你是一位整合了薩提爾、NLP 與榮格的內在煉金師。
-當前渴望：${discoveredYearning}。步驟：【${stage.name}】。
-任務：引導使用者將脆弱轉化為力量，制定具體行動腳本。語言繁體中文。確保語意完整。`;
+        systemInstruction = `你是一位整合了薩提爾、NLP 與榮格的內在煉金師。當前渴望：${discoveredYearning}。步驟：【${stage.name}】。任務：協助使用者將脆弱轉化為力量，制定具體行動腳本。語言繁體中文。確保語意完整。`;
     }
 
-    const contents = [
-        ...chatHistory.map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] })),
-        { role: 'user', parts: [{ text: userMessage }] }
-    ];
-
-    if (!proxyUrl) return "⚠️ 請配置代理網址。";
+    const contents = chatHistory.map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
 
     try {
         const response = await fetch(proxyUrl, {
@@ -366,9 +369,16 @@ ${stage.isSummary ? "【關鍵指令】這是總結階段。請不要提問。�
             }),
             mode: 'cors'
         });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "伺服器無回應");
+        }
+        
         const result = await response.json();
-        return result.text || "AI 連線異常。";
+        return result.text || "AI 回應內容為空。";
     } catch (err) {
+        console.error("API Call Error:", err);
         return `❌ 連線失敗: ${err.message}`;
     }
 }
@@ -378,7 +388,7 @@ function createMessage(text, isUser) {
     wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const bubble = document.createElement('div');
     bubble.className = `max-w-[90%] p-4 rounded-3xl ${isUser ? 'bg-slate-800 text-white rounded-tr-sm shadow-md' : 'bg-white border border-stone-200 text-slate-700 rounded-tl-sm shadow-sm'}`;
-    if (!isUser) bubble.innerHTML = `<div class="text-[10px] font-bold ${currentMode === MODES.ICEBERG ? 'text-sky-600' : 'text-amber-600'} mb-1 uppercase tracking-widest">${currentMode === MODES.ICEBERG ? '薩提爾教練' : '煉金師'}</div>`;
+    if (!isUser) bubble.innerHTML = `<div class="text-[10px] font-bold ${currentMode === MODES.ICEBERG ? 'text-sky-600' : 'text-amber-600'} mb-1 uppercase tracking-widest">${currentMode === MODES.ICEBERG ? '薩提爾教練' : '行動煉金師'}</div>`;
     const content = document.createElement('div');
     content.className = 'whitespace-pre-wrap leading-relaxed text-[15px]';
     content.textContent = text;
@@ -392,27 +402,32 @@ function switchModeToAlchemy() {
     currentStep = 0;
     chatHistory = []; 
 
-    // 強制重啟 UI
+    // 重要：強制重啟 UI，防止鎖死
     userInputArea.disabled = false;
     sendBtn.disabled = false;
     inputWrapper.classList.remove('hidden');
     completionMsg.classList.add('hidden');
     document.getElementById('stage-transition-btn').classList.add('hidden');
+    userInputArea.focus();
 
     document.getElementById('app-icon').textContent = '🧪';
     document.getElementById('app-title').textContent = '3D 煉金術與行動模擬器';
     document.getElementById('app-badge').textContent = 'Stage 2';
-    document.getElementById('app-badge').className = 'text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded ml-2 font-bold uppercase';
+    document.getElementById('app-badge').className = 'text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded ml-2 font-bold uppercase tracking-widest';
     
     coachHeader.className = 'p-6 bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 shrink-0';
     document.getElementById('coach-title').innerHTML = '<span>🧪</span> 行動煉金引導';
-    document.getElementById('coach-desc').textContent = '轉換渴望為心理資源。';
+    document.getElementById('coach-desc').textContent = '將剛才發現的渴望，轉化為具體的心理資源與行動。';
     
     document.getElementById('iceberg-visual').classList.add('hidden');
     document.getElementById('alchemy-visual').classList.remove('hidden');
+    
+    stepIndicator.textContent = `階段 2：${STAGES.ALCHEMY[0].name}`;
+    stepIndicator.className = 'text-[11px] text-amber-600 font-bold ml-2 uppercase';
 
-    const welcome = `恭喜完成了冰山探索。看見了您的渴望：『${discoveredYearning}』。\n\n開啟「3D 煉金術」。第一步：【陰影整合】。\n\n請嘗試感受那個脆弱渴望，想像它是一個需要被呵護的部分。現在成熟強大的您，請對這個「內在的自己」說一句充滿保證且有力量的話？`;
+    const welcome = `恭喜完成冰山探索。看見了您的核心渴望：『${discoveredYearning}』。\n\n現在開啟「3D 煉金術」。第一步：【陰影整合與重新撫育】。\n\n請嘗試感受那個脆弱的渴望（如：恐懼、受傷或渴望被看見），想像它是一個需要被您溫柔呵護的內在部分。作為一個成熟且有資源的您，現在您可以對這個「內在的自己」說一句什麼樣充滿力量與保證的話？`;
     chatContainer.appendChild(createMessage(welcome, false));
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 async function handleSend() {
@@ -428,10 +443,11 @@ async function handleSend() {
     const typing = document.createElement('div');
     typing.id = 'typing-indicator';
     typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-2xl flex items-center"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-2xl flex items-center shadow-sm"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
     chatContainer.appendChild(typing);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
+    // 更新圖像
     if (currentMode === MODES.ICEBERG) {
         if (currentStep === 0) document.getElementById('layer-text-0').textContent = input;
         const stageInfo = STAGES.ICEBERG[currentStep];
@@ -455,14 +471,22 @@ async function handleSend() {
     }
 
     const coachResponse = await callGemini(input);
-    typing.remove();
+    
+    // 移除 Loading 並顯示回應
+    if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     chatContainer.appendChild(createMessage(coachResponse, false));
     chatHistory.push({ role: "coach", text: coachResponse });
     
-    if (!coachResponse.includes("❌")) currentStep++;
+    // 檢查回應是否正常
+    const isError = coachResponse.startsWith("⚠️") || coachResponse.startsWith("❌");
+    
+    if (!isError) {
+        currentStep++;
+    }
 
     const currentStages = currentMode === MODES.ICEBERG ? STAGES.ICEBERG : STAGES.ALCHEMY;
     
+    // 重啟輸入系統或完成階段
     if (currentStep < currentStages.length) {
         stepIndicator.textContent = `${currentMode === MODES.ICEBERG ? '階段 1' : '階段 2'}：${currentStages[currentStep].name}`;
         userInputArea.disabled = false;
@@ -473,10 +497,10 @@ async function handleSend() {
             inputWrapper.classList.add('hidden');
             document.getElementById('stage-transition-btn').classList.remove('hidden');
             completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "✨ 冰山深度分析已完成。點擊進入煉金。";
+            completionMsg.textContent = "✨ 冰山深度探索完成，專業分析已產出。";
         } else {
             completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "🎉 模擬完成！請匯出報告。";
+            completionMsg.textContent = "🎉 行動模擬完成！請點擊上方匯出報告。";
         }
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -484,7 +508,7 @@ async function handleSend() {
 
 window.selectTool = function(toolName) {
     if (currentMode === MODES.ALCHEMY && !userInputArea.disabled) {
-        userInputArea.value = `我決定使用工具箱中的【${toolName}】。`;
+        userInputArea.value = `我決定使用工具箱中的【${toolName}】來協助自己。`;
         userInputArea.focus();
     }
 };
@@ -505,4 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
     resetBtn.onclick = () => location.reload();
 
-    chatContainer.appendChild(createMessage("您好，我是您的薩提爾心理教練
+    chatContainer.appendChild(createMessage("您好，我是您的薩提爾心理教練。請描述一件最近讓您感到有情緒、受挫或引發衝突的具體事件。當時發生了什麼事？您採取了什麼應對方式？", false));
+});
+</script>
+</body>
+</html>
