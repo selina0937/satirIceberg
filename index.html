@@ -323,14 +323,14 @@ async function callGemini(userMessage) {
         systemInstruction = `你是一位精通「薩提爾成長模型」的資深心理教練。你的任務是引導使用者探索內在冰山。
 目前的步驟是：【${STAGES.ICEBERG[currentStep].name}】。
 目標是：${STAGES.ICEBERG[currentStep].promptGoal}。
-守則：戴上偵探帽，保持好奇與客觀。一次只問一個問題。針對使用者回覆給予反映式同理。語言使用繁體中文。`;
+守則：戴上偵探帽，保持好奇與客觀。一次只問一個問題。針對使用者回覆給予反映式同理。回覆必須詳盡且完整，請勿在語句中途斷掉。語言使用繁體中文。`;
     } else {
         systemInstruction = `你現在是一位整合了「薩提爾 7A」、「NLP 感知位置」與「榮格陰影整合」的行動教練與內在煉金術士。
 使用者目前的狀態：已發現冰山底層渴望為「${discoveredYearning}」。
 你的任務：不要再問為什麼。嚴格按照以下步驟引導：
 目前的步驟是：【${STAGES.ALCHEMY[currentStep].name}】。
 目標是：${STAGES.ALCHEMY[currentStep].promptGoal}。
-守則：一次一個步驟。專注於「轉化脆弱為力量」與「制定行動腳本」。語言使用繁體中文。`;
+守則：一次一個步驟。專注於「轉化脆弱為力量」與「制定行動腳本」。回覆請確保語意完整且充滿力量。語言使用繁體中文。`;
     }
 
     const contents = [
@@ -338,12 +338,19 @@ async function callGemini(userMessage) {
         { role: 'user', parts: [{ text: userMessage }] }
     ];
 
+    // 配置生成參數，確保輸出長度足夠
+    const generationConfig = {
+        maxOutputTokens: 2048,
+        temperature: 0.75,
+        topP: 0.95
+    };
+
     if (proxyUrl) {
         try {
             const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents, systemInstruction }),
+                body: JSON.stringify({ contents, systemInstruction, generationConfig }),
                 mode: 'cors'
             });
             const result = await response.json();
@@ -356,14 +363,25 @@ async function callGemini(userMessage) {
 
     if (!directKey) return "⚠️ 請點擊設定⚙️，配置 API 連線。";
 
+    // Direct Fallback (傳入 generationConfig)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${directKey}`;
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: systemInstruction + "\n\n對話歷史：\n" + chatHistory.map(h => h.role + ": " + h.text).join("\n") + "\n使用者最新回覆：" + userMessage }] }] })
+            body: JSON.stringify({ 
+                contents: [
+                    { role: 'user', parts: [{ text: systemInstruction }] },
+                    ...contents.map(c => ({ role: c.role, parts: c.parts }))
+                ],
+                generationConfig 
+            })
         });
         const result = await response.json();
+        const finishReason = result.candidates?.[0]?.finishReason;
+        if (finishReason === "MAX_TOKENS") {
+            console.warn("AI 回覆達到長度上限而被截斷。");
+        }
         return result.candidates?.[0]?.content?.parts?.[0]?.text || "連線錯誤。";
     } catch (err) {
         return "❌ API 呼叫失敗。";
@@ -441,7 +459,6 @@ async function handleSend() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
     if (currentMode === MODES.ICEBERG) {
-        // 放寬行為層摘要字數
         if (currentStep === 0) {
             document.getElementById('layer-text-0').textContent = input.length > 80 ? input.substring(0, 77) + '...' : input;
         }
@@ -451,7 +468,6 @@ async function handleSend() {
         const label = document.getElementById(`layer-text-${stageInfo.targetLayer}`);
         
         layer.classList.add('active');
-        // 使用真實輸入更新圖表層級，而不僅僅是顯示「已完成覺察」
         label.textContent = input.length > 100 ? input.substring(0, 97) + '...' : input;
         
         if (currentStep === 3) discoveredYearning = input; 
@@ -460,7 +476,7 @@ async function handleSend() {
         const visual = document.getElementById(stageInfo.visualId);
         const text = document.getElementById(stageInfo.visualId.replace('step', 'text'));
         visual.classList.add('active');
-        text.textContent = input; // 煉金階段不強制截斷
+        text.textContent = input;
     }
 
     const coachResponse = await callGemini(input);
