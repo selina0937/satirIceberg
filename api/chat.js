@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "伺服器環境變數 GEMINI_API_KEY 缺失，請在 Vercel 設定後重新部署。" });
   }
 
-  const modelId = "gemini-2.5-flash-preview-09-2025";
+  const modelId = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
