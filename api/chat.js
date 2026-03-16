@@ -1,26 +1,20 @@
 // Vercel Serverless Function (Node.js)
-// 確保你在 Vercel Dashboard 設定了環境變數 GEMINI_API_KEY
-
 export default async function handler(req, res) {
-  // 處理 CORS (允許你的 GitHub Pages 呼叫)
+  // CORS 設定
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: "Only POST allowed" });
 
   const { contents, systemInstruction } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: "Missing GEMINI_API_KEY environment variable on server." });
+    console.error("錯誤：環境變數 GEMINI_API_KEY 未設定");
+    return res.status(500).json({ error: "伺服器環境變數 GEMINI_API_KEY 缺失，請在 Vercel 設定後重新部署。" });
   }
 
   const modelId = "gemini-2.5-flash-preview-09-2025";
@@ -32,64 +26,23 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
-          { role: 'user', parts: [{ text: systemInstruction }] }, // 將指令作為首條訊息
+          { role: 'user', parts: [{ text: systemInstruction }] },
           ...contents
         ]
       })
     });
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI 沒有回覆。";
 
+    if (!response.ok) {
+      console.error("Google API 錯誤:", data);
+      return res.status(response.status).json({ error: data.error?.message || "Google API 呼叫失敗" });
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI 暫時無法回應。";
     res.status(200).json({ text });
   } catch (error) {
-    res.status(500).json({ error: "Failed to connect to Gemini API" });
-  }
-}// Vercel Serverless Function (Node.js)
-// 確保你在 Vercel Dashboard 設定了環境變數 GEMINI_API_KEY
-
-export default async function handler(req, res) {
-  // 處理 CORS (允許你的 GitHub Pages 呼叫)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  const { contents, systemInstruction } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Missing GEMINI_API_KEY environment variable on server." });
-  }
-
-  const modelId = "gemini-2.5-flash-preview-09-2025";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          { role: 'user', parts: [{ text: systemInstruction }] }, // 將指令作為首條訊息
-          ...contents
-        ]
-      })
-    });
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI 沒有回覆。";
-
-    res.status(200).json({ text });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to connect to Gemini API" });
+    console.error("伺服器運行錯誤:", error);
+    res.status(500).json({ error: "伺服器發生意外錯誤：" + error.message });
   }
 }
