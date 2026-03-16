@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   // 3. 呼叫 Gemini API
   // 使用最新 preview 模型以支援進階心理分析
-  const modelId = "gemini-2.5-flash-preview-09-2025";
+  const modelId = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
