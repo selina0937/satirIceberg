@@ -1,6 +1,6 @@
 /**
  * 薩提爾全效工具 - 專用後端代理 (Vercel Serverless Function)
- * V2.3 強化錯誤捕捉與 Token 效率優化
+ * V2.4 強化階段切換指令隔離與輸出完整性
  */
 
 export default async function handler(req, res) {
@@ -15,19 +15,21 @@ export default async function handler(req, res) {
   const { contents, systemInstruction, generationConfig } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: "伺服器 GEMINI_API_KEY 缺失。" });
+  if (!apiKey) return res.status(500).json({ error: "伺服器環境變數缺失。" });
 
-  const modelId = "gemini-2.5-flash";
+  const modelId = "gemini-2.5";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
     const payload = {
       contents: contents,
+      // 確保指令獨立於對話內容，防止 AI 混淆
       systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         ...(generationConfig || {}),
-        maxOutputTokens: 2048, // 適度降低以節省 TPM，但仍足夠心理分析
-        temperature: 0.7
+        maxOutputTokens: 4096, 
+        temperature: 0.75,
+        topP: 0.95
       }
     };
 
@@ -37,24 +39,22 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload)
     });
 
-    // 檢查 Google 是否回傳了非 JSON 內容
     const contentType = response.headers.get("content-type");
     if (!contentType || contentType.indexOf("application/json") === -1) {
       const rawText = await response.text();
-      return res.status(response.status).json({ error: "Google API 回傳非 JSON 內容：" + rawText.substring(0, 100) });
+      return res.status(response.status).json({ error: "API 回傳異常格式：" + rawText.substring(0, 100) });
     }
 
     const data = await response.json();
 
     if (!response.ok) {
-      const errMsg = data.error?.message || "Google API 呼叫失敗";
-      return res.status(response.status).json({ error: errMsg });
+      return res.status(response.status).json({ error: data.error?.message || "呼叫失敗" });
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     res.status(200).json({ text });
 
   } catch (error) {
-    res.status(500).json({ error: "伺服器代理異常：" + error.message });
+    res.status(500).json({ error: "代理執行錯誤：" + error.message });
   }
 }
