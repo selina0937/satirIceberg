@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   }
 
   // 3. 呼叫 Gemini 2.5 Flash 模型
-  const modelId = "gemini-2.5-pro";
+  const modelId = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
@@ -70,4 +70,12 @@ export default async function handler(req, res) {
     }
 
     // 5. 成功回傳 AI 生成的文字
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "教練暫時無法產出文字
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "教練暫時無法產出文字，請嘗試重新送出。";
+    
+    res.status(200).json({ text });
+
+  } catch (error) {
+    console.error("Vercel Runtime Error:", error);
+    res.status(500).json({ error: "伺服器處理連線時發生錯誤：" + error.message });
+  }
+}
