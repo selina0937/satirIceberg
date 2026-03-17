@@ -3,278 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>薩提爾全效成長工具：冰山探索與 3D 煉金術</title>
-    <!-- 引用 Tailwind CSS 進行排版 -->
+    <title>薩提爾冰山探索工具 - 第一階段</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f4; color: #1c1917; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f4; }
 
-        /* 視覺層基礎效果 */
-        .visual-layer-container {
-            display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-bottom: 8px; transition: all 0.5s;
-        }
-        .ai-question-label {
-            width: 35%; text-align: right; font-size: 10px; color: #78716c; line-height: 1.3; margin-top: 12px; opacity: 0.6;
-        }
         .visual-layer {
-            width: 65%; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0.1; transform: translateY(10px); filter: grayscale(1);
+            transition: all 0.4s ease-out; opacity: 0.1; transform: translateY(10px);
         }
         .visual-layer.active {
-            opacity: 1; transform: translateY(0); filter: grayscale(0);
-            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.1);
+            opacity: 1; transform: translateY(0); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
-
-        /* 氣泡進場動畫 */
         .chat-bubble-enter { animation: bubbleIn 0.3s ease-out forwards; }
         @keyframes bubbleIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
 
-        /* 工具箱互動 */
-        .tool-card { transition: all 0.2s ease; cursor: pointer; user-select: none; }
-        .tool-card:hover { transform: translateY(-3px); border-color: #f59e0b; background-color: #fffbeb; }
-
-        /* PDF 列印優化：專業分頁佈局 */
+        /* PDF 專業報告排版：隱藏對話，專注於圖像化報表，確保不截斷 */
         @media print {
             .no-print { display: none !important; }
             html, body { height: auto !important; overflow: visible !important; background: white !important; }
-            main { display: block !important; }
-            section { width: 100% !important; border: none !important; position: static !important; padding: 0 !important; margin: 0 !important; }
-            #chat-container { height: auto !important; overflow: visible !important; display: block !important; margin-bottom: 2cm; }
+            main { display: block !important; height: auto !important; overflow: visible !important; }
             
-            #visual-section { page-break-before: always; background: white !important; padding: 1.5cm !important; display: block !important; }
-            .visual-layer-container { margin-bottom: 30px !important; gap: 20px !important; }
-            .ai-question-label { width: 30% !important; opacity: 1 !important; color: #000 !important; font-size: 11pt !important; }
-            .visual-layer { 
-                opacity: 1 !important; filter: none !important; transform: none !important; 
-                width: 70% !important; border: 2px solid #000 !important; padding: 20px !important;
+            #chat-section { display: none !important; } /* 列印時隱藏對話區 */
+            
+            #visual-section { 
+                width: 100% !important; max-width: 100% !important; display: block !important; 
+                padding: 0 !important; background: white !important; overflow: visible !important;
             }
-            .glass-panel { background: #fff !important; border: 2px solid #000 !important; }
-            .visual-layer p { color: #000 !important; font-weight: bold !important; font-size: 12pt !important; line-height: 1.6; }
-            .print-title { display: block !important; text-align: center; margin-bottom: 1.5cm; border-bottom: 4px solid #000; padding-bottom: 15px; }
-            h1, h2, h3, h4 { color: black !important; }
-            #iceberg-visual, #alchemy-visual { display: block !important; width: 100% !important; }
+            .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
+            
+            .visual-layer { 
+                page-break-inside: avoid !important; margin-bottom: 20px !important; 
+                border: 2px solid #333 !important; border-radius: 12px !important;
+                display: flex !important; flex-direction: row !important;
+            }
+            /* 左側 AI 問題區 */
+            .visual-layer .ai-q-box { 
+                width: 35% !important; background: #f8fafc !important; border-right: 2px solid #ddd !important; 
+                padding: 15px !important; display: block !important;
+            }
+            /* 右側使用者回答區 */
+            .visual-layer .user-a-box { 
+                width: 65% !important; padding: 15px !important; display: block !important;
+            }
+            .visual-layer p, .visual-layer div { 
+                color: #000 !important; font-size: 12pt !important; line-height: 1.6; 
+                -webkit-line-clamp: unset !important; overflow: visible !important; max-height: none !important;
+                white-space: pre-wrap !important;
+            }
+            #iceberg-visual { display: block !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .w-full, .max-w-xl { max-width: 100% !important; width: 100% !important; }
         }
         .print-title { display: none; }
-        .modal-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 100; }
+        .ai-q-box { display: none; } /* 螢幕模式下預設隱藏左側問題，維持冰山造型 */
+        
+        /* 螢幕模式的冰山造型微調 */
+        @media screen {
+            .layer-0 { width: 100%; max-width: 24rem; margin: 0 auto; }
+            .layer-1 { width: 100%; max-width: 26rem; margin: 0 auto; }
+            .layer-2 { width: 100%; max-width: 28rem; margin: 0 auto; }
+            .layer-3 { width: 100%; max-width: 30rem; margin: 0 auto; }
+            .layer-4 { width: 100%; max-width: 32rem; margin: 0 auto; }
+            .layer-5 { width: 100%; max-width: 34rem; margin: 0 auto; }
+        }
+        .modal-overlay { background: rgba(0,0,0,0.8); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="h-screen flex flex-col overflow-hidden text-slate-900">
 
-<!-- 標題列 -->
 <header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
     <div class="flex items-center gap-3 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
         <span class="text-3xl">🧊</span>
         <div>
-            <h1 class="text-lg font-bold tracking-tight">薩提爾全效工具 <span class="text-[10px] bg-stone-800 text-white px-2 py-0.5 rounded ml-1">V2.5</span></h1>
-            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold tracking-tighter">Unified Coaching & Alchemy System</p>
+            <h1 class="text-lg font-bold tracking-tight">薩提爾冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded ml-1">Stage 1</span></h1>
+            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Iceberg Dynamics</p>
         </div>
     </div>
     <div class="flex items-center gap-2">
-        <button id="btn-pdf" class="text-xs px-4 py-2 bg-stone-900 hover:bg-black text-white rounded-full transition-all font-bold shadow-lg active:scale-95">📄 匯出完整報告</button>
-        <button id="btn-reset" class="text-xs px-4 py-2 bg-white hover:bg-red-50 text-stone-500 rounded-full transition-all border border-stone-200">重置</button>
+        <!-- 初始隱藏，完成後顯示 -->
+        <button id="btn-pdf" class="hidden text-xs px-4 py-2 bg-slate-900 hover:bg-black text-white rounded-full transition-all font-bold shadow-lg">匯出圖像報告</button>
+        <button id="btn-reset" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-red-50 text-stone-500 rounded-full transition-all">重置探索</button>
     </div>
 </header>
 
 <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-    <!-- 左側：快狠準對話區 -->
-    <section class="w-full md:w-[45%] lg:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-xl overflow-hidden">
-        <div id="coach-header" class="p-4 bg-stone-50 border-b border-stone-100 shrink-0 no-print">
-            <h2 id="coach-title" class="text-sm font-bold text-stone-800 flex items-center gap-2"><span>🛡️</span> 心理直擊教練</h2>
-            <p id="coach-desc" class="text-[10px] text-slate-500">直擊潛意識核心，轉化內在資源。</p>
+    <!-- 左側對話區 -->
+    <section id="chat-section" class="w-full md:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-2xl overflow-hidden no-print">
+        <div class="p-4 bg-sky-50 border-b border-sky-100 shrink-0">
+            <h2 class="text-sm font-bold text-sky-900 flex items-center gap-2"><span>🛡️</span> 直擊潛意識教練</h2>
+            <p class="text-[10px] text-sky-700">我們不說廢話，請直接面對核心動力。</p>
         </div>
-
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-24 bg-[#fcfcfc]"></div>
-
-        <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30 no-print">
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-4 bg-[#fcfcfc]"></div>
+        <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
             <div id="input-area" class="flex flex-col gap-3">
-                <textarea id="user-input" rows="2" class="w-full resize-none rounded-2xl border border-stone-300 p-4 text-sm focus:ring-2 focus:ring-stone-900 bg-stone-50 shadow-inner" placeholder="請直接輸入您的想法..."></textarea>
+                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="請直接輸入您的回應..."></textarea>
                 <div class="flex justify-between items-center">
-                    <span id="step-indicator" class="text-[10px] text-stone-400 font-bold uppercase">Ready to Dive</span>
-                    <button id="btn-send" class="bg-stone-900 hover:bg-black text-white px-8 py-2 rounded-full font-bold shadow-lg active:scale-95 transition-all">送出 ➤</button>
+                    <span id="step-indicator" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Phase 1/5</span>
+                    <button id="btn-send" class="bg-sky-700 hover:bg-sky-800 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出 ➤</button>
                 </div>
             </div>
-            <div id="stage-transition-btn" class="hidden text-center p-2">
-                <button id="btn-start-alchemy" class="w-full bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold py-3 rounded-2xl shadow-xl hover:scale-[1.02] transition-all">✨ 開啟 3D 行動煉金 ✨</button>
+            <!-- 完成後顯示的跳轉按鈕 -->
+            <div id="stage-transition-btn" class="hidden text-center mt-3 pt-3 border-t border-stone-100">
+                <p class="text-xs text-stone-500 mb-3 font-bold">第一階段完成。請將脆弱轉化為力量。</p>
+                <button id="btn-start-alchemy" class="w-full bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                    ✨ 開啟第二階段：3D 行動煉金 ✨
+                </button>
             </div>
         </div>
     </section>
 
-    <!-- 右側：專業圖像報告區 -->
-    <section id="visual-section" class="w-full md:w-[55%] lg:w-[60%] h-[50vh] md:h-full bg-stone-100 overflow-y-auto relative flex flex-col">
+    <!-- 右側圖像分析區 (這區是 PDF 列印的重點) -->
+    <section id="visual-section" class="w-full md:w-[60%] h-[50vh] md:h-full bg-stone-100 overflow-y-auto relative flex flex-col">
         <div class="print-title">
-            <h1 class="text-3xl font-bold">薩提爾心理深度分析報告</h1>
-            <p class="text-slate-500 mt-2">內在冰山結構與 3D 行動演練紀錄</p>
+            <h1 class="text-3xl font-bold">薩提爾潛意識冰山分析報告</h1>
+            <p class="text-slate-500 mt-2">深層心理動力解碼與真實自我探索</p>
         </div>
 
-        <!-- 冰山視覺模型 (Stage 1) -->
         <div id="iceberg-visual" class="px-6 lg:px-12 flex flex-col items-center justify-start min-h-max shrink-0 pb-20 mt-10">
-            <div class="w-full max-w-2xl flex flex-col items-center relative">
+            <div class="w-full flex flex-col items-center relative gap-3">
                 
-                <!-- 每一層現在是 [AI 問題標籤] + [使用者回覆方框] -->
-                <div class="visual-layer-container">
-                    <div class="ai-question-label">AI：描述一件有情緒的事。</div>
-                    <div id="layer-0" class="visual-layer active glass-panel rounded-t-3xl p-4 text-center border-t-4 border-sky-500 z-50">
-                        <h4 class="font-bold text-[9px] text-sky-600 uppercase mb-1 no-print">1. 行為反應</h4>
-                        <p id="layer-text-0" class="text-[11px] text-stone-700 leading-relaxed italic">等待輸入描述...</p>
+                <!-- 每一層現在包含左側 AI 問題，右側使用者回答 -->
+                <div id="layer-0" class="layer-0 visual-layer active bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-sky-700 uppercase tracking-widest mb-2">1. 行為與感受 (水面淺層)</h4>
+                        <p class="text-xs text-slate-600">發生了什麼事？採取了什麼應對姿態？當下的真實情緒是什麼？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-sky-700 uppercase tracking-widest mb-1 md:hidden print:hidden">1. 行為與感受</h4>
+                        <div id="layer-text-0" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">等待輸入事件...</div>
                     </div>
                 </div>
 
-                <div class="w-full h-0 border-b-2 border-dashed border-sky-400 my-4 flex justify-center no-print">
-                    <span class="px-4 bg-stone-100 text-sky-500 text-[9px] font-bold -mt-2 uppercase tracking-widest">水面 (意識界線)</span>
+                <div class="w-[140%] h-0 border-b-2 border-dashed border-sky-300 my-2 flex justify-center no-print">
+                    <span class="px-4 bg-stone-100 text-sky-500 text-[10px] font-bold -mt-2 uppercase tracking-widest">水面 (意識界線)</span>
                 </div>
 
-                <div class="visual-layer-container">
-                    <div id="q-label-1" class="ai-question-label"></div>
-                    <div id="layer-1" class="visual-layer glass-panel rounded-xl p-4 text-center border-l-4 border-blue-500 z-30">
-                        <h4 class="font-bold text-slate-800 text-[9px] uppercase no-print">2. 內在感受</h4>
-                        <p id="layer-text-1" class="text-[11px] text-stone-700 leading-relaxed italic">尚未分析</p>
+                <div id="layer-1" class="layer-1 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-blue-700 uppercase tracking-widest mb-2">2. 觀點與意義 (中層)</h4>
+                        <p class="text-xs text-slate-600">你對這件事在心裡賦予了什麼意義？有什麼規條或假設？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-blue-700 uppercase tracking-widest mb-1 md:hidden print:hidden">2. 觀點與意義</h4>
+                        <div id="layer-text-1" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
                     </div>
                 </div>
 
-                <div class="visual-layer-container">
-                    <div id="q-label-2" class="ai-question-label"></div>
-                    <div id="layer-2" class="visual-layer glass-panel rounded-xl p-4 text-center border-l-4 border-indigo-500 z-20">
-                        <h4 class="font-bold text-slate-800 text-[10px] uppercase no-print">3. 觀點解讀</h4>
-                        <p id="layer-text-2" class="text-[11px] text-stone-700 leading-relaxed italic">尚未分析</p>
+                <div id="layer-2" class="layer-2 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-indigo-700 uppercase tracking-widest mb-2">3. 期待 (底層)</h4>
+                        <p class="text-xs text-slate-600">你心裡原本希望事情怎麼發展？對對方或自己有什麼具體期待？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-indigo-700 uppercase tracking-widest mb-1 md:hidden print:hidden">3. 期待</h4>
+                        <div id="layer-text-2" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
                     </div>
                 </div>
 
-                <div class="visual-layer-container">
-                    <div id="q-label-3" class="ai-question-label"></div>
-                    <div id="layer-3" class="visual-layer glass-panel rounded-xl p-4 text-center border-l-4 border-violet-600 z-10">
-                        <h4 class="font-bold text-slate-800 text-[10px] uppercase no-print">4. 未滿足期待</h4>
-                        <p id="layer-text-3" class="text-[11px] text-stone-700 leading-relaxed italic">尚未分析</p>
+                <div id="layer-3" class="layer-3 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-violet-700 uppercase tracking-widest mb-2">4. 渴望 (深層)</h4>
+                        <p class="text-xs text-slate-600">在期待落空背後，你真正渴望的是不是被愛、被重視或安全感？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-violet-700 uppercase tracking-widest mb-1 md:hidden print:hidden">4. 渴望</h4>
+                        <div id="layer-text-3" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
                     </div>
                 </div>
 
-                <div class="visual-layer-container">
-                    <div id="q-label-4" class="ai-question-label"></div>
-                    <div id="layer-4" class="visual-layer glass-panel rounded-xl p-5 text-center border-l-4 border-purple-600 z-0">
-                        <h4 class="font-bold text-slate-800 text-[10px] uppercase no-print">5. 核心渴望</h4>
-                        <p id="layer-text-4" class="text-[11px] text-stone-700 leading-relaxed italic">尚未分析</p>
+                <div id="layer-4" class="layer-4 visual-layer bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row print:flex-row mt-4">
+                    <div class="ai-q-box bg-slate-800 p-6 border-b md:border-b-0 md:border-r border-slate-700 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[11px] text-amber-400 uppercase tracking-widest mb-2">5. 真實自我 (I AM)</h4>
+                        <p class="text-xs text-slate-300">看見渴望後，這個具有生命力且完整的『你』，可以怎麼滿足自己？</p>
                     </div>
-                </div>
-
-                <div class="visual-layer-container">
-                    <div id="q-label-5" class="ai-question-label"></div>
-                    <div id="layer-5" class="visual-layer bg-slate-900 rounded-b-3xl p-6 text-center shadow-2xl mt-4 border-t-2 border-amber-400/30">
-                        <h4 class="font-bold text-white text-sm uppercase tracking-widest no-print">6. 真實自我 (I AM)</h4>
-                        <p id="layer-text-5" class="text-[11px] text-amber-100/70 leading-relaxed italic">靜候連結資源...</p>
+                    <div class="user-a-box p-6 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[11px] text-amber-400 uppercase tracking-widest mb-2 md:hidden print:hidden">5. 真實自我 (I AM)</h4>
+                        <div id="layer-text-4" class="text-[15px] text-amber-50 leading-relaxed italic line-clamp-6 print:line-clamp-none">靜候連結深層資源...</div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3D 煉金模型 (Stage 2) -->
-        <div id="alchemy-visual" class="hidden p-6 lg:p-12 flex flex-col items-center">
-            <div class="bg-amber-100 border border-amber-200 rounded-3xl p-6 w-full max-w-2xl shadow-sm mb-8 no-print text-center">
-                <h3 class="text-amber-900 font-bold mb-4 text-xs uppercase tracking-widest">自尊維護工具箱 (點擊提取)</h3>
-                <div class="grid grid-cols-4 gap-2">
-                    <div class="tool-card bg-white border border-amber-200 p-3 rounded-2xl shadow-sm" onclick="selectTool('偵探帽')"><span class="text-2xl block">🕵️</span><span class="text-[9px] font-bold">偵探帽</span></div>
-                    <div class="tool-card bg-white border border-amber-200 p-3 rounded-2xl shadow-sm" onclick="selectTool('金鑰匙')"><span class="text-2xl block">🔑</span><span class="text-[9px] font-bold">金鑰匙</span></div>
-                    <div class="tool-card bg-white border border-amber-200 p-3 rounded-2xl shadow-sm" onclick="selectTool('勇氣杖')"><span class="text-2xl block">🪄</span><span class="text-[9px] font-bold">勇氣杖</span></div>
-                    <div class="tool-card bg-white border border-amber-200 p-3 rounded-2xl shadow-sm" onclick="selectTool('心')"><span class="text-2xl block">❤️</span><span class="text-[9px] font-bold">心</span></div>
-                </div>
-            </div>
-            <div id="alchemy-progress" class="w-full max-w-2xl space-y-6">
-                <div id="alchemy-step-1" class="visual-layer glass-panel p-6 rounded-3xl border-l-8 border-amber-500">
-                    <h4 class="font-bold text-amber-900 text-xs uppercase mb-2">Step 1：陰影接納與資源化</h4>
-                    <p id="alchemy-text-1" class="text-[12px] text-stone-800 leading-relaxed font-bold italic">等待演練紀錄...</p>
-                </div>
-                <div id="alchemy-step-2" class="visual-layer bg-slate-900 p-8 rounded-3xl shadow-2xl">
-                    <h4 class="font-bold text-amber-400 text-xs uppercase mb-3">Final：一致性行動溝通腳本</h4>
-                    <p id="alchemy-text-2" class="text-[13px] text-white leading-relaxed whitespace-pre-wrap font-bold italic">分析與生成中...</p>
                 </div>
             </div>
         </div>
     </section>
 </main>
 
-<!-- API Proxy 設定彈窗 -->
-<div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay no-print">
-    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-stone-900">
-        <h3 class="text-xl font-bold mb-2">⚙️ 系統通訊設定</h3>
-        <p class="text-xs text-stone-400 mb-6">更換 Vercel 代理網址以解決配額或解析問題。</p>
+<div id="modal-settings" class="hidden modal-overlay no-print">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-slate-900">
+        <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
+        <p class="text-xs text-slate-400 mb-6">填入 Vercel 代理網址解決連線問題。</p>
         <div class="space-y-4">
-            <div>
-                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Vercel Proxy URL</label>
-                <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 text-sm" placeholder="https://your-app.vercel.app/api/chat">
-            </div>
+            <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:ring-2 focus:ring-slate-900 text-sm" placeholder="https://your-app.vercel.app/api/chat">
             <div class="flex gap-2 justify-end mt-4">
-                <button id="btn-modal-close" class="px-6 py-2 text-slate-400 font-bold hover:text-slate-600">取消</button>
-                <button id="btn-modal-save" class="px-6 py-2 bg-stone-900 text-white rounded-full font-bold active:scale-95 transition-all">儲存重啟</button>
+                <button id="btn-modal-close" class="px-6 py-2 text-slate-400 font-bold">取消</button>
+                <button id="btn-modal-save" class="px-6 py-2 bg-slate-900 text-white rounded-full font-bold">更新設定</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-/**
- * 薩提爾全效工具 V2.5 核心邏輯
- * 解決 PDF 冗餘、第二階段鎖死與 AI 混亂問題
- */
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
-const STAGES = {
-    ICEBERG: [
-        { id: 0, nextQ: "這件事對你而言意味著什麼？背後藏著什麼『必須、應該』的生存規條嗎？", targetLayer: 1 },
-        { id: 1, nextQ: "那時你內心真正的期待是什麼？對自己、或對對方的期待？", targetLayer: 2 },
-        { id: 2, nextQ: "看穿期待，你真正渴望的資源是愛、被接納、還是安全感？", targetLayer: 3 },
-        { id: 3, nextQ: "回到真實自我，現在那個生命力充沛、不被環境牽動的『你』是什麼樣子？", targetLayer: 4 },
-        { id: 4, isSummary: true, targetLayer: 5 }
-    ],
-    ALCHEMY: [
-        { id: 0, visualId: "alchemy-step-1", nextQ: "現在，請運用剛才提取的資源，對下一次發生的情境進行演練。你會如何一致性地表達？" },
-        { id: 1, visualId: "alchemy-step-2", isFinal: true }
-    ]
-};
+const STAGES = [
+    { id: 0, nextQ: "你對這件事或對方說的話，在心裡『賦予了什麼意義』？背後有什麼規條或假設？" },
+    { id: 1, nextQ: "在那種情況下，你原本心裡『希望』事情怎麼發展？你對對方或自己有什麼具體期待？" },
+    { id: 2, nextQ: "在這個失落的期待背後，你真正渴望的，是不是想要感覺被愛、被接納、被重視，還是安全感？" },
+    { id: 3, nextQ: "既然你看到了自己真正渴望的，現在這個具有生命力且完整的『你』，可以怎麼為自己滿足這個渴望，而不需要依賴對方改變？" },
+    { id: 4, isSummary: true }
+];
 
-let currentMode = 'ICEBERG';
 let currentStep = 0;
 let chatHistory = [];
 let discoveredYearning = "";
-let logoClickCount = 0;
 
-let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, stepIndicator;
+let chatContainer, userInputArea, sendBtn, inputWrapper, pdfBtn, transitionBtn, stepIndicator;
 
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-    if (!proxyUrl) return "⚠️ 請連點標題 5 下配置 Proxy URL。";
+    if (!proxyUrl) return "⚠️ 請點擊標題 5 下配置 Proxy URL。";
     if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
         proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
     }
 
-    let systemInstruction = "";
-    if (currentMode === 'ICEBERG') {
-        const stage = STAGES.ICEBERG[currentStep];
-        systemInstruction = `你是一位精通薩提爾模型的心理直擊教練。風格：快、狠、準。
-守則：1. 不要重複同理，直接針對心理動力分析。 2. 絕不問對話細節。
-${stage.isSummary ? "指令：針對冰山全層次進行極具洞察力的整合分析並祝賀完成。不要提問。" : "指令：分析完後請精準提出此問題：" + stage.nextQ}
+    const stage = STAGES[currentStep];
+    const systemInstruction = `你現在是一位精通「薩提爾成長模型」的資深心理教練。任務：引導冰山深潛。
+【互動守則】
+1. 快、狠、準：不帶主觀評判，不要一次丟出所有問題。
+2. 不要廢話：針對回答進行簡短同理後，立即推進到下一層。不准重複問說過的話。
+${stage.isSummary ? "3. 這是最後一步。不要再問問題。請針對使用者的『行為、感受、觀點、期待、渴望、自我』進行一段極具洞察力、專業且溫暖的總結分析，並恭喜完成。" : "3. 簡短同理後，直接拋出這一個問題：" + stage.nextQ}
 語言：繁體中文。`;
-    } else {
-        const stage = STAGES.ALCHEMY[currentStep];
-        systemInstruction = `你是一位整合了 NLP 的行動煉金師。渴望：${discoveredYearning}。任務：協助使用者將脆弱轉化為力量，制定具體溝通腳本。不要討論第一階段的過程。${stage.isFinal ? "指令：產出最終腳本。" : "指令：引導演練。"} 語言：繁體中文。`;
-    }
 
-    // 只保留最近對話以節省配額
+    // 優化 TPM：只帶最近的對話脈絡
     const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
 
     try {
         const response = await fetch(proxyUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: context, systemInstruction, generationConfig: { maxOutputTokens: 2048 } }),
+            body: JSON.stringify({ contents: context, systemInstruction }),
             mode: 'cors'
         });
         
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
             const result = await response.json();
-            if (!response.ok) return `❌ 錯誤: ${result.error || "連線超時"}`;
+            if (!response.ok) return `❌ 錯誤: ${result.error || "連線異常"}`;
             return result.text;
         } else {
-            return `❌ 伺服器傳回非 JSON 內容。請檢查 Vercel 設定或等一分鐘。`;
+            return `❌ 伺服器傳回異常格式 (HTTP ${response.status})。`;
         }
     } catch (err) {
         return `❌ 連線失敗: ${err.message}`;
@@ -285,38 +263,14 @@ function createMessage(text, isUser) {
     const wrapper = document.createElement('div');
     wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const bubble = document.createElement('div');
-    bubble.className = `max-w-[90%] p-4 rounded-3xl ${isUser ? 'bg-stone-800 text-white rounded-tr-sm shadow-xl' : 'bg-white border border-stone-200 text-stone-700 rounded-tl-sm shadow-sm'}`;
-    if (!isUser) bubble.innerHTML = `<div class="text-[9px] font-bold ${currentMode === 'ICEBERG' ? 'text-sky-600' : 'text-amber-600'} mb-1 uppercase tracking-widest">${currentMode === 'ICEBERG' ? '教練' : '行動煉金師'}</div>`;
+    bubble.className = `max-w-[90%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-sky-900 text-white rounded-tr-none' : 'bg-white border border-stone-200 text-slate-800 rounded-tl-none'}`;
+    if (!isUser) bubble.innerHTML = `<div class="text-[9px] font-bold text-sky-600 mb-1 uppercase tracking-widest">心理教練</div>`;
     const content = document.createElement('div');
-    content.className = 'whitespace-pre-wrap leading-relaxed text-[13px]';
+    content.className = 'whitespace-pre-wrap leading-relaxed text-[14px]';
     content.textContent = text;
     bubble.appendChild(content);
     wrapper.appendChild(bubble);
     return wrapper;
-}
-
-function switchModeToAlchemy() {
-    currentMode = 'ALCHEMY'; 
-    currentStep = 0; 
-    chatHistory = []; // 清空舊歷史，防止 AI 角色混淆
-    
-    // 強力解鎖 UI，徹底修正鎖死問題
-    userInputArea.disabled = false; 
-    sendBtn.disabled = false;
-    inputWrapper.classList.remove('hidden'); 
-    completionMsg.classList.add('hidden');
-    document.getElementById('stage-transition-btn').classList.add('hidden');
-    
-    document.getElementById('app-title').textContent = '3D 煉金術與行動模擬器';
-    document.getElementById('app-badge').textContent = 'Stage 2';
-    document.getElementById('iceberg-visual').classList.add('hidden');
-    document.getElementById('alchemy-visual').classList.remove('hidden');
-    
-    userInputArea.focus();
-
-    const welcome = `看見了你的渴望：『${discoveredYearning}』。\n\n現在進入「3D 煉金術」。第一步：【陰影接納】。想像這個脆弱部分是你內在最需要接納的碎片。對它說一句成熟且充滿保證的話？`;
-    chatContainer.appendChild(createMessage(welcome, false));
-    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 async function handleSend() {
@@ -330,32 +284,19 @@ async function handleSend() {
     const typing = document.createElement('div');
     typing.id = 'typing-indicator';
     typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border p-3 rounded-2xl flex items-center shadow-sm"><div class="text-[10px] text-stone-400 italic">直擊動力中...</div></div>`;
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">直擊分析中...</div></div>`;
     chatContainer.appendChild(typing);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
-    // 視覺回饋：更新左側問題與方框回覆
-    if (currentMode === 'ICEBERG') {
-        if (currentStep === 0) document.getElementById('layer-text-0').textContent = input;
-        const stage = STAGES.ICEBERG[currentStep];
-        if (stage?.targetLayer) {
-            const box = document.getElementById(`layer-${stage.targetLayer}`);
-            const text = document.getElementById(`layer-text-${stage.targetLayer}`);
-            const qLabel = document.getElementById(`q-label-${stage.targetLayer}`);
-            
-            box.classList.add('active');
-            text.textContent = input; text.classList.remove('italic');
-            // 將 AI 剛才的問題填入左側標籤
-            if (currentStep > 0) qLabel.textContent = `AI：${STAGES.ICEBERG[currentStep-1].nextQ}`;
-            if (currentStep === 3) discoveredYearning = input;
-        }
-    } else {
-        const stage = STAGES.ALCHEMY[currentStep];
-        if (stage?.visualId) {
-            const text = document.getElementById(stage.visualId.replace('step', 'text'));
-            document.getElementById(stage.visualId).classList.add('active');
-            text.textContent = input; text.classList.remove('italic');
-        }
+    // 更新圖像
+    const layerEl = document.getElementById(`layer-${currentStep}`);
+    const textEl = document.getElementById(`layer-text-${currentStep}`);
+    if(layerEl && textEl) {
+        layerEl.classList.add('active');
+        textEl.textContent = input;
+        textEl.classList.remove('italic');
+        // 保存渴望 (Step 3 是渴望層)
+        if (currentStep === 3) discoveredYearning = input;
     }
 
     const coachResponse = await callGemini(input);
@@ -363,70 +304,62 @@ async function handleSend() {
     chatContainer.appendChild(createMessage(coachResponse, false));
     chatHistory.push({ role: "coach", text: coachResponse });
 
-    // 報錯處理
-    if (coachResponse.includes("❌") || coachResponse.includes("⚠️")) {
+    if (coachResponse.includes("❌")) {
         userInputArea.disabled = false; sendBtn.disabled = false; return;
     }
 
     currentStep++;
-    const stages = (currentMode === 'ICEBERG') ? STAGES.ICEBERG : STAGES.ALCHEMY;
     
-    if (currentStep < stages.length) {
-        stepIndicator.textContent = `Phase: ${currentStep + 1} / ${stages.length}`;
+    if (currentStep < STAGES.length) {
+        stepIndicator.textContent = `Phase ${currentStep + 1} / ${STAGES.length}`;
         userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus();
     } else {
-        if (currentMode === 'ICEBERG') {
-            inputWrapper.classList.add('hidden');
-            document.getElementById('stage-transition-btn').classList.remove('hidden');
-            completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "✨ 冰山深度解碼完成。";
-        } else {
-            completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "🎉 煉金演練完成！請點擊標題匯出報告。";
-        }
+        // 第一階段完美結束
+        userInputArea.disabled = true; sendBtn.disabled = true;
+        inputWrapper.classList.add('hidden');
+        transitionBtn.classList.remove('hidden');
+        pdfBtn.classList.remove('hidden'); // 此時才顯示匯出按鈕
+        
+        // 將發現的渴望存入 LocalStorage，供第二階段讀取
+        localStorage.setItem('satir_discovered_yearning', discoveredYearning);
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
-
-window.selectTool = function(toolName) {
-    if (currentMode === 'ALCHEMY' && !userInputArea.disabled) {
-        userInputArea.value = `我提取工具箱中的【${toolName}】賦予自己力量。`;
-        userInputArea.focus();
-    }
-};
 
 document.addEventListener('DOMContentLoaded', () => {
     chatContainer = document.getElementById('chat-container');
     userInputArea = document.getElementById('user-input');
     sendBtn = document.getElementById('btn-send');
     inputWrapper = document.getElementById('input-area');
-    completionMsg = document.getElementById('completion-msg');
+    pdfBtn = document.getElementById('btn-pdf');
+    transitionBtn = document.getElementById('stage-transition-btn');
     stepIndicator = document.getElementById('step-indicator');
+    
+    // 跳轉到第二階段
+    document.getElementById('btn-start-alchemy').onclick = () => {
+        window.location.href = 'actionSimulator.html';
+    };
+
+    let logoClickCount = 0;
     const modal = document.getElementById('modal-settings');
     const proxyIn = document.getElementById('proxy-url-input');
 
     document.getElementById('header-logo').onclick = () => {
         logoClickCount++;
-        if(logoClickCount >= 5) { 
-            modal.classList.remove('hidden'); 
-            proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-            logoClickCount = 0; 
-        }
+        if(logoClickCount >= 5) { modal.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; }
     };
-    
     document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
     document.getElementById('btn-modal-save').onclick = () => {
         localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim());
         modal.classList.add('hidden'); location.reload();
     };
 
-    document.getElementById('btn-pdf').onclick = () => window.print();
-    document.getElementById('btn-start-alchemy').onclick = switchModeToAlchemy;
+    pdfBtn.onclick = () => window.print();
     sendBtn.onclick = handleSend;
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
     document.getElementById('btn-reset').onclick = () => location.reload();
 
-    chatContainer.appendChild(createMessage("您好。請直接描述最近讓您感到情緒受挫的一件事。發生了什麼？你直覺的反應是什麼？", false));
+    chatContainer.appendChild(createMessage("您好。請直接簡述一件最近讓你感到有情緒、受挫或引發衝突的具體事件。當時發生了什麼事？你採取了什麼反應？當下的真實情緒是什麼？", false));
 });
 </script>
 </body>
