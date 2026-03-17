@@ -1,50 +1,33 @@
 /**
  * 薩提爾全效工具 - 專用後端代理 (Vercel Serverless Function)
- * 解決回覆截斷與 API 限額錯誤處理
+ * V2.3 強化錯誤捕捉與 Token 效率優化
  */
 
 export default async function handler(req, res) {
-  // 1. CORS 與安全性設定：允許您的 GitHub Pages 跨域呼叫
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // 處理預檢請求 (Preflight)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // 僅允許 POST 請求
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: "只支援 POST 方法。" });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
 
   const { contents, systemInstruction, generationConfig } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  // 2. 檢查 Vercel 環境變數
-  if (!apiKey) {
-    return res.status(500).json({ 
-      error: "伺服器環境變數 GEMINI_API_KEY 未設定，請在 Vercel 設定後重新部署專案。" 
-    });
-  }
+  if (!apiKey) return res.status(500).json({ error: "伺服器 GEMINI_API_KEY 缺失。" });
 
-  // 3. 呼叫 Gemini 2.5 Flash 模型
   const modelId = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
   try {
     const payload = {
-      contents: contents, // 包含過往對話紀錄
-      systemInstruction: {
-        parts: [{ text: systemInstruction }] // 獨立系統指令，強化 AI 依從性
-      },
+      contents: contents,
+      systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
-        ...(generationConfig || {}), // 接收前端傳入的 config
-        maxOutputTokens: 4096,      // 強制設定高上限，防止文字被切斷
-        temperature: 0.75,          // 保持適度心理分析深度
-        topP: 0.95
+        ...(generationConfig || {}),
+        maxOutputTokens: 2048, // 適度降低以節省 TPM，但仍足夠心理分析
+        temperature: 0.7
       }
     };
 
@@ -54,28 +37,24 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload)
     });
 
-    const data = await response.json();
-
-    // 4. 錯誤處理邏輯
-    if (!response.ok) {
-      // 針對配額限制 (Rate Limit / Quota) 給予明確提示
-      if (response.status === 429) {
-        return res.status(429).json({ 
-          error: "Google API 限額已滿（通常是每分鐘 15 次或每日 1500 次上限）。請等一分鐘後再試，或嘗試更換 API Key。" 
-        });
-      }
-      return res.status(response.status).json({ 
-        error: data.error?.message || "呼叫 Google API 時發生未知錯誤。" 
-      });
+    // 檢查 Google 是否回傳了非 JSON 內容
+    const contentType = response.headers.get("content-type");
+    if (!contentType || contentType.indexOf("application/json") === -1) {
+      const rawText = await response.text();
+      return res.status(response.status).json({ error: "Google API 回傳非 JSON 內容：" + rawText.substring(0, 100) });
     }
 
-    // 5. 成功回傳 AI 生成的文字
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "教練暫時無法產出文字，請嘗試重新送出。";
-    
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errMsg = data.error?.message || "Google API 呼叫失敗";
+      return res.status(response.status).json({ error: errMsg });
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     res.status(200).json({ text });
 
   } catch (error) {
-    console.error("Vercel Runtime Error:", error);
-    res.status(500).json({ error: "伺服器處理連線時發生錯誤：" + error.message });
+    res.status(500).json({ error: "伺服器代理異常：" + error.message });
   }
 }
