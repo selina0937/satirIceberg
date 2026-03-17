@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薩提爾冰山探索工具 - 第一階段</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f5f5f4; }
+
+        .visual-layer {
+            transition: all 0.4s ease-out; opacity: 0.1; transform: translateY(10px);
+        }
+        .visual-layer.active {
+            opacity: 1; transform: translateY(0); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .chat-bubble-enter { animation: bubbleIn 0.3s ease-out forwards; }
+        @keyframes bubbleIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+
+        /* PDF 專業報告排版：隱藏對話，專注於圖像化報表，確保不截斷 */
+        @media print {
+            .no-print { display: none !important; }
+            html, body { height: auto !important; overflow: visible !important; background: white !important; }
+            main { display: block !important; height: auto !important; overflow: visible !important; }
+            
+            #chat-section { display: none !important; } /* 列印時隱藏對話區 */
+            
+            #visual-section { 
+                width: 100% !important; max-width: 100% !important; display: block !important; 
+                padding: 0 !important; background: white !important; overflow: visible !important;
+            }
+            .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
+            
+            .visual-layer { 
+                page-break-inside: avoid !important; margin-bottom: 20px !important; 
+                border: 2px solid #333 !important; border-radius: 12px !important;
+                display: flex !important; flex-direction: row !important;
+            }
+            /* 左側 AI 問題區 */
+            .visual-layer .ai-q-box { 
+                width: 35% !important; background: #f8fafc !important; border-right: 2px solid #ddd !important; 
+                padding: 15px !important; display: block !important;
+            }
+            /* 右側使用者回答區 */
+            .visual-layer .user-a-box { 
+                width: 65% !important; padding: 15px !important; display: block !important;
+            }
+            .visual-layer p, .visual-layer div { 
+                color: #000 !important; font-size: 12pt !important; line-height: 1.6; 
+                -webkit-line-clamp: unset !important; overflow: visible !important; max-height: none !important;
+                white-space: pre-wrap !important;
+            }
+            #iceberg-visual { display: block !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .w-full, .max-w-xl { max-width: 100% !important; width: 100% !important; }
+        }
+        .print-title { display: none; }
+        .ai-q-box { display: none; } /* 螢幕模式下預設隱藏左側問題，維持冰山造型 */
+        
+        /* 螢幕模式的冰山造型微調 */
+        @media screen {
+            .layer-0 { width: 100%; max-width: 24rem; margin: 0 auto; }
+            .layer-1 { width: 100%; max-width: 26rem; margin: 0 auto; }
+            .layer-2 { width: 100%; max-width: 28rem; margin: 0 auto; }
+            .layer-3 { width: 100%; max-width: 30rem; margin: 0 auto; }
+            .layer-4 { width: 100%; max-width: 32rem; margin: 0 auto; }
+            .layer-5 { width: 100%; max-width: 34rem; margin: 0 auto; }
+        }
+        .modal-overlay { background: rgba(0,0,0,0.8); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-900">
+
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
+    <div class="flex items-center gap-3 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
+        <span class="text-3xl">🧊</span>
+        <div>
+            <h1 class="text-lg font-bold tracking-tight">薩提爾冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded ml-1">Stage 1</span></h1>
+            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Iceberg Dynamics</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2">
+        <!-- 初始隱藏，完成後顯示 -->
+        <button id="btn-pdf" class="hidden text-xs px-4 py-2 bg-slate-900 hover:bg-black text-white rounded-full transition-all font-bold shadow-lg">匯出圖像報告</button>
+        <button id="btn-reset" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-red-50 text-stone-500 rounded-full transition-all">重置探索</button>
+    </div>
+</header>
+
+<main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+    <!-- 左側對話區 -->
+    <section id="chat-section" class="w-full md:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-2xl overflow-hidden no-print">
+        <div class="p-4 bg-sky-50 border-b border-sky-100 shrink-0">
+            <h2 class="text-sm font-bold text-sky-900 flex items-center gap-2"><span>🛡️</span> 直擊潛意識教練</h2>
+            <p class="text-[10px] text-sky-700">我們不說廢話，請直接面對核心動力。</p>
+        </div>
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-4 bg-[#fcfcfc]"></div>
+        <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
+            <div id="input-area" class="flex flex-col gap-3">
+                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="請直接輸入您的回應..."></textarea>
+                <div class="flex justify-between items-center">
+                    <span id="step-indicator" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Phase 1/5</span>
+                    <button id="btn-send" class="bg-sky-700 hover:bg-sky-800 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出 ➤</button>
+                </div>
+            </div>
+            <!-- 完成後顯示的跳轉按鈕 -->
+            <div id="stage-transition-btn" class="hidden text-center mt-3 pt-3 border-t border-stone-100">
+                <p class="text-xs text-stone-500 mb-3 font-bold">第一階段分析完成。請匯出報告或前往下一階段。</p>
+                <button id="btn-start-alchemy" class="w-full bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                    ✨ 開啟第二階段：3D 行動煉金 ✨
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 右側圖像分析區 (這區是 PDF 列印的重點) -->
+    <section id="visual-section" class="w-full md:w-[60%] h-[50vh] md:h-full bg-stone-100 overflow-y-auto relative flex flex-col">
+        <div class="print-title">
+            <h1 class="text-3xl font-bold">薩提爾潛意識冰山分析報告</h1>
+            <p class="text-slate-500 mt-2">深層心理動力解碼與真實自我探索</p>
+        </div>
+
+        <div id="iceberg-visual" class="px-6 lg:px-12 flex flex-col items-center justify-start min-h-max shrink-0 pb-20 mt-10">
+            <div class="w-full flex flex-col items-center relative gap-3">
+                
+                <!-- 每一層現在包含左側 AI 問題，右側使用者回答 -->
+                <div id="layer-0" class="layer-0 visual-layer active bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-sky-700 uppercase tracking-widest mb-2">1. 行為與感受 (水面淺層)</h4>
+                        <p class="text-xs text-slate-600">發生了什麼事？您採取了什麼應對姿態？當下的真實情緒是什麼？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-sky-700 uppercase tracking-widest mb-1 md:hidden print:hidden">1. 行為與感受</h4>
+                        <div id="layer-text-0" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">等待輸入事件...</div>
+                    </div>
+                </div>
+
+                <div class="w-[140%] h-0 border-b-2 border-dashed border-sky-300 my-2 flex justify-center no-print">
+                    <span class="px-4 bg-stone-100 text-sky-500 text-[10px] font-bold -mt-2 uppercase tracking-widest">水面 (意識界線)</span>
+                </div>
+
+                <div id="layer-1" class="layer-1 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-blue-700 uppercase tracking-widest mb-2">2. 觀點與意義 (中層)</h4>
+                        <p class="text-xs text-slate-600">你對這件事或對方說的話，在心裡賦予了什麼意義？有什麼規條或假設？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-blue-700 uppercase tracking-widest mb-1 md:hidden print:hidden">2. 觀點與意義</h4>
+                        <div id="layer-text-1" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
+                    </div>
+                </div>
+
+                <div id="layer-2" class="layer-2 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-indigo-700 uppercase tracking-widest mb-2">3. 期待 (底層)</h4>
+                        <p class="text-xs text-slate-600">在那種情況下，你心裡原本希望事情怎麼發展？對對方或自己有什麼具體期待？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-indigo-700 uppercase tracking-widest mb-1 md:hidden print:hidden">3. 期待</h4>
+                        <div id="layer-text-2" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
+                    </div>
+                </div>
+
+                <div id="layer-3" class="layer-3 visual-layer bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row print:flex-row">
+                    <div class="ai-q-box bg-slate-50 p-4 border-b md:border-b-0 md:border-r border-stone-200 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[10px] text-violet-700 uppercase tracking-widest mb-2">4. 渴望 (深層)</h4>
+                        <p class="text-xs text-slate-600">在這個失落的期待背後，你真正渴望的，是不是想感覺被愛、被接納、被重視，還是安全感？</p>
+                    </div>
+                    <div class="user-a-box p-4 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[10px] text-violet-700 uppercase tracking-widest mb-1 md:hidden print:hidden">4. 渴望</h4>
+                        <div id="layer-text-3" class="text-sm text-slate-800 leading-relaxed italic line-clamp-4 print:line-clamp-none">尚未觸及</div>
+                    </div>
+                </div>
+
+                <div id="layer-4" class="layer-4 visual-layer bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row print:flex-row mt-4">
+                    <div class="ai-q-box bg-slate-800 p-6 border-b md:border-b-0 md:border-r border-slate-700 md:w-1/3 print:w-1/3 print:block">
+                        <h4 class="font-bold text-[11px] text-amber-400 uppercase tracking-widest mb-2">5. 真實自我 (I AM)</h4>
+                        <p class="text-xs text-slate-300">看見渴望後，這個具有生命力且完整的『你』，可以怎麼為自己滿足這個渴望，而不需要依賴對方的改變？</p>
+                    </div>
+                    <div class="user-a-box p-6 md:w-2/3 print:w-2/3 flex flex-col justify-center">
+                        <h4 class="font-bold text-[11px] text-amber-400 uppercase tracking-widest mb-2 md:hidden print:hidden">5. 真實自我 (I AM)</h4>
+                        <div id="layer-text-4" class="text-[15px] text-amber-50 leading-relaxed italic line-clamp-6 print:line-clamp-none">靜候連結深層資源...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="modal-settings" class="hidden modal-overlay no-print">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-slate-900">
+        <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
+        <p class="text-xs text-slate-400 mb-6">填入 Vercel 代理網址解決連線問題。</p>
+        <div class="space-y-4">
+            <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl focus:ring-2 focus:ring-slate-900 text-sm" placeholder="https://your-app.vercel.app/api/chat">
+            <div class="flex gap-2 justify-end mt-4">
+                <button id="btn-modal-close" class="px-6 py-2 text-slate-400 font-bold">取消</button>
+                <button id="btn-modal-save" class="px-6 py-2 bg-slate-900 text-white rounded-full font-bold">更新設定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const DEFAULT_PROXY_URL = ""; 
+
+const STAGES = [
+    { id: 0, nextQ: "你對這件事或對方說的話，在心裡『賦予了什麼意義』？引導我找出內在的規條或假設。" },
+    { id: 1, nextQ: "在那種情況下，你原本心裡『希望』事情怎麼發展？你對對方或對自己有什麼具體的期待？" },
+    { id: 2, nextQ: "在這個失落的期待背後，你真正渴望的，是不是想要感覺被愛、被接納、被重視、有安全感，或者是想要連結與自由？" },
+    { id: 3, nextQ: "既然你看到了自己真正渴望的，現在這個具有生命力且完整的『你』，可以怎麼為自己滿足這個渴望，而不需要依賴對方的改變？" },
+    { id: 4, isSummary: true }
+];
+
+let currentStep = 0;
+let chatHistory = [];
+let discoveredYearning = "https://satir-iceberg.vercel.app/api/chat";
+
+let chatContainer, userInputArea, sendBtn, inputWrapper, pdfBtn, transitionBtn, stepIndicator;
+
+async function callGemini(userMessage) {
+    let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
+    if (!proxyUrl) return "⚠️ 請點擊標題 5 下配置 Proxy URL。";
+    if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
+        proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
+    }
+
+    const stage = STAGES[currentStep];
+    const systemInstruction = `你現在是一位精通「薩提爾成長模型」的資深心理教練。任務：引導我探索內在冰山。
+【互動守則】
+1. 保持客觀好奇，不帶評判。
+2. 不說廢話，快狠準。根據我的回答進行簡短同理後，立即推進到下一層。不准重複問我已經說過的事。
+${stage.isSummary ? "3. 這是最後一步。不要再問問題。請針對我剛才的回答（行為、感受、觀點、期待、渴望、自我）進行一段極具洞察力的總結分析，並恭喜我完成探索。" : "3. 簡短同理後，直接拋出這一個問題：" + stage.nextQ}
+語言：繁體中文。`;
+
+    // 縮減歷史紀錄傳送以節省 TPM
+    const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
+
+    try {
+        const response = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: context, systemInstruction }),
+            mode: 'cors'
+        });
+        
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const result = await response.json();
+            if (!response.ok) return `❌ 錯誤: ${result.error || "連線異常"}`;
+            return result.text;
+        } else {
+            return `❌ 伺服器傳回異常格式 (HTTP ${response.status})。`;
+        }
+    } catch (err) {
+        return `❌ 連線失敗: ${err.message}`;
+    }
+}
+
+function createMessage(text, isUser) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[90%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-sky-900 text-white rounded-tr-none' : 'bg-white border border-stone-200 text-slate-800 rounded-tl-none'}`;
+    if (!isUser) bubble.innerHTML = `<div class="text-[9px] font-bold text-sky-600 mb-1 uppercase tracking-widest">心理教練</div>`;
+    const content = document.createElement('div');
+    content.className = 'whitespace-pre-wrap leading-relaxed text-[14px]';
+    content.textContent = text;
+    bubble.appendChild(content);
+    wrapper.appendChild(bubble);
+    return wrapper;
+}
+
+async function handleSend() {
+    const input = userInputArea.value.trim();
+    if (!input) return;
+
+    chatContainer.appendChild(createMessage(input, true));
+    chatHistory.push({ role: "user", text: input });
+    userInputArea.value = ''; userInputArea.disabled = true; sendBtn.disabled = true;
+    
+    const typing = document.createElement('div');
+    typing.id = 'typing-indicator';
+    typing.className = 'flex justify-start chat-bubble-enter';
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">直擊分析中...</div></div>`;
+    chatContainer.appendChild(typing);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    // 更新圖像層級內容
+    const layerEl = document.getElementById(`layer-${currentStep}`);
+    const textEl = document.getElementById(`layer-text-${currentStep}`);
+    if(layerEl && textEl) {
+        layerEl.classList.add('active');
+        textEl.textContent = input;
+        textEl.classList.remove('italic');
+        // 保存渴望 (Step 3 是渴望層)
+        if (currentStep === 3) discoveredYearning = input;
+    }
+
+    const coachResponse = await callGemini(input);
+    if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
+    chatContainer.appendChild(createMessage(coachResponse, false));
+    chatHistory.push({ role: "coach", text: coachResponse });
+
+    if (coachResponse.includes("❌")) {
+        userInputArea.disabled = false; sendBtn.disabled = false; return;
+    }
+
+    currentStep++;
+    
+    if (currentStep < STAGES.length) {
+        stepIndicator.textContent = `Phase ${currentStep + 1} / ${STAGES.length}`;
+        userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus();
+    } else {
+        // 第一階段完美結束，顯示匯出報告與進入第二階段按鈕
+        userInputArea.disabled = true; sendBtn.disabled = true;
+        inputWrapper.classList.add('hidden');
+        transitionBtn.classList.remove('hidden');
+        pdfBtn.classList.remove('hidden'); 
+        
+        // 跨分頁傳遞渴望數據
+        localStorage.setItem('satir_discovered_yearning', discoveredYearning);
+    }
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    chatContainer = document.getElementById('chat-container');
+    userInputArea = document.getElementById('user-input');
+    sendBtn = document.getElementById('btn-send');
+    inputWrapper = document.getElementById('input-area');
+    pdfBtn = document.getElementById('btn-pdf');
+    transitionBtn = document.getElementById('stage-transition-btn');
+    stepIndicator = document.getElementById('step-indicator');
+    
+    // 跳轉到第二階段分頁
+    document.getElementById('btn-start-alchemy').onclick = () => {
+        window.location.href = 'actionSimulator.html';
+    };
+
+    let logoClickCount = 0;
+    const modal = document.getElementById('modal-settings');
+    const proxyIn = document.getElementById('proxy-url-input');
+
+    document.getElementById('header-logo').onclick = () => {
+        logoClickCount++;
+        if(logoClickCount >= 5) { modal.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; }
+    };
+    document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
+    document.getElementById('btn-modal-save').onclick = () => {
+        localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim());
+        modal.classList.add('hidden'); location.reload();
+    };
+
+    pdfBtn.onclick = () => window.print();
+    sendBtn.onclick = handleSend;
+    userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+    document.getElementById('btn-reset').onclick = () => location.reload();
+
+    chatContainer.appendChild(createMessage("您好。請直接描述一件最近讓你感到有情緒、受挫或引發衝突的具體事件。當時發生了什麼事？你採取了什麼應對姿態？當下的真實情緒是什麼？", false));
+});
+</script>
+</body>
+</html>
