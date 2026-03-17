@@ -1,9 +1,10 @@
 /**
  * 薩提爾全效工具 - 專用後端代理 (Vercel Serverless Function)
- * V2.8 指定使用 Gemini 2.5 Flash
+ * 使用 Gemini 2.5 Flash 模型
  */
 
 export default async function handler(req, res) {
+  // CORS 與安全性設定
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -15,9 +16,9 @@ export default async function handler(req, res) {
   const { contents, systemInstruction, generationConfig } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: "伺服器 API KEY 缺失。" });
+  if (!apiKey) return res.status(500).json({ error: "伺服器環境變數缺失。" });
 
-  // 指定使用 Gemini 2.5 Flash
+  // 鎖定使用 Gemini 2.5 Flash
   const modelId = "gemini-2.5-flash"; 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
       generationConfig: {
         ...(generationConfig || {}),
         maxOutputTokens: 4096, 
-        temperature: 0.8,
+        temperature: 0.7,
         topP: 0.95
       }
     };
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
     const contentType = response.headers.get("content-type");
     if (!contentType || contentType.indexOf("application/json") === -1) {
       const rawText = await response.text();
-      return res.status(response.status).json({ error: "API 響應格式異常" });
+      return res.status(response.status).json({ error: "API 響應異常：" + rawText.substring(0, 100) });
     }
 
     const data = await response.json();
