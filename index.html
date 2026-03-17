@@ -79,7 +79,7 @@
     <section class="w-full md:w-[45%] lg:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-xl overflow-hidden">
         <div id="coach-header" class="p-4 bg-slate-50 border-b border-slate-200 shrink-0 no-print">
             <h2 id="coach-title" class="text-sm font-bold text-slate-900 flex items-center gap-2"><span>🛡️</span> 核心直擊教練</h2>
-            <p id="coach-desc" class="text-[10px] text-slate-500">快、狠、準。直搗潛意識動力，不糾結對話細節。</p>
+            <p id="coach-desc" class="text-[10px] text-slate-500">快、狠、準。直搗潛意識動力。</p>
         </div>
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 pb-24 bg-[#fafaf9]"></div>
         <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30 no-print">
@@ -162,11 +162,11 @@
     </section>
 </main>
 
-<!-- API Proxy Settings Modal (Hidden by default) -->
+<!-- API Proxy Settings Modal -->
 <div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
         <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
-        <p class="text-xs text-slate-400 mb-6">開發者秘技：如果您看到 Quota Exceeded，請更換您的 Vercel API Key 並在此重填網址。</p>
+        <p class="text-xs text-slate-400 mb-6">更換 Proxy URL 或檢查 Vercel 狀態。</p>
         <div class="space-y-4">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Vercel Proxy URL</label>
@@ -182,17 +182,17 @@
 
 <script>
 /**
- * 薩提爾 V2.2：解決鎖死、截斷與圖像報告問題
+ * 薩提爾全效工具：修復 JSON 解析與按鈕鎖定問題
  */
-const DEFAULT_PROXY_URL = ""; 
+const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
 const STAGES = {
     ICEBERG: [
-        { id: 0, question: "發生了什麼事？你當時直覺的情緒反應是什麼？", targetLayer: 1 },
-        { id: 1, question: "這件事對你而言意味著什麼？背後藏著什麼『必須、應該』的生存規條嗎？", targetLayer: 2 },
-        { id: 2, question: "那時你內心真正的期待是什麼？對自己、或對對方的期待？", targetLayer: 3 },
-        { id: 3, question: "看穿期待，你真正渴望的心理資源是愛、被接納、還是安全感？", targetLayer: 4 },
-        { id: 4, question: "回到真實自我，現在那個生命力充沛、不受外在影響的『你』是什麼樣子？", targetLayer: 5 },
+        { id: 0, question: "發生了什麼事？你當時的情緒反應是什麼？", targetLayer: 1 },
+        { id: 1, question: "這件事對你而言意味著什麼？背後藏著什麼『必須、應該』的規條嗎？", targetLayer: 2 },
+        { id: 2, question: "那時你內心真正的期待是什麼？", targetLayer: 3 },
+        { id: 3, question: "你真正渴望的心理資源是愛、接納、還是安全感？", targetLayer: 4 },
+        { id: 4, question: "看見了渴望，現在充滿生命力的『你』會是什麼樣子？", targetLayer: 5 },
         { id: 5, isSummary: true }
     ],
     ALCHEMY: [
@@ -212,26 +212,19 @@ let chatContainer, userInputArea, sendBtn, inputWrapper, completionMsg, stepIndi
 
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-    if (!proxyUrl) return "⚠️ 請點擊標題 5 下配置 Vercel 代理網址。";
+    if (!proxyUrl) return "⚠️ 請點擊標題 5 下配置 Proxy URL。";
     
-    // 自動修正路徑
     if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
         proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
     }
 
-    let systemInstruction = "https://satir-iceberg.vercel.app/api/chat";
+    let systemInstruction = "";
     if (currentMode === 'ICEBERG') {
         const stage = STAGES.ICEBERG[currentStep];
-        systemInstruction = `你是一位快、狠、準的薩提爾心理教練。
-指令：
-1. 不要廢話同理，直接擊中痛點。
-2. 絕不問對話細節。直接針對心理動力提問。
-3. 一次一個問題。
-4. ${stage.isSummary ? "指令：針對剛才所有層次進行極具洞察力的整合分析並祝賀完成。" : "分析後直接提出下一個核心問題：" + stage.question}
-語言：繁體中文。回覆字數需充足且完整。`;
+        systemInstruction = `你是一位直擊核心的薩提爾心理教練。守則：1. 不要冗長同理。2. 絕不問對白細節。3. ${stage.isSummary ? "指令：針對冰山進行專業整合分析並祝賀完成。" : "分析後提出問題：" + stage.question} 語言：繁體中文。`;
     } else {
         const stage = STAGES.ALCHEMY[currentStep];
-        systemInstruction = `你是一位行動教練。渴望：${discoveredYearning}。任務：快狠準協助使用者將脆弱轉化為力量，制定行動腳本。語言：繁體中文。`;
+        systemInstruction = `你是一位整合 NLP 的行動教練。渴望：${discoveredYearning}。任務：快狠準制定行動腳本。語言：繁體中文。`;
     }
 
     const contents = chatHistory.map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
@@ -244,18 +237,21 @@ async function callGemini(userMessage) {
             mode: 'cors'
         });
         
-        const result = await response.json();
-        
-        if (!response.ok) {
-            // 解析 Google 原生錯誤，特別是 429 配額問題
-            const errorMsg = result.error || "連線異常";
-            if (response.status === 429) {
-                return `❌ API 配額限制：${errorMsg}。建議更換 API Key 或等一分鐘後再試。`;
+        // 解決 JSON.parse 報錯：先檢查 Content-Type
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const result = await response.json();
+            if (!response.ok) {
+                if (response.status === 429) return "❌ API 配額限制：請稍等一分鐘後再試。";
+                return `❌ 伺服器錯誤: ${result.error || "未知錯誤"}`;
             }
-            throw new Error(errorMsg);
+            return result.text;
+        } else {
+            // 處理非 JSON 回傳（如 Vercel 崩潰產生的 HTML 頁面）
+            const textError = await response.text();
+            console.error("Non-JSON Error:", textError);
+            return `❌ 連線失敗 (HTTP ${response.status}): 伺服器傳回了非 JSON 內容。請檢查 Vercel 日誌。`;
         }
-        
-        return result.text;
     } catch (err) {
         return `❌ 連線失敗: ${err.message}`;
     }
@@ -265,7 +261,7 @@ function createMessage(text, isUser) {
     const wrapper = document.createElement('div');
     wrapper.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const bubble = document.createElement('div');
-    bubble.className = `max-w-[90%] p-4 rounded-3xl ${isUser ? 'bg-slate-800 text-white rounded-tr-sm shadow-md' : 'bg-white border text-slate-700 rounded-tl-sm shadow-sm'}`;
+    bubble.className = `max-w-[90%] p-3 md:p-4 rounded-3xl ${isUser ? 'bg-slate-800 text-white rounded-tr-sm' : 'bg-white border text-slate-700 rounded-tl-sm shadow-sm'}`;
     if (!isUser) bubble.innerHTML = `<div class="text-[9px] font-bold ${currentMode === 'ICEBERG' ? 'text-sky-600' : 'text-amber-600'} mb-1 uppercase tracking-widest">${currentMode === 'ICEBERG' ? '教練' : '行動師'}</div>`;
     const content = document.createElement('div');
     content.className = 'whitespace-pre-wrap leading-relaxed text-[13px]';
@@ -280,7 +276,7 @@ function switchModeToAlchemy() {
     currentStep = 0;
     chatHistory = [];
     
-    // 強制重啟輸入狀態
+    // 強制重啟 UI
     userInputArea.disabled = false;
     sendBtn.disabled = false;
     inputWrapper.classList.remove('hidden');
@@ -289,13 +285,11 @@ function switchModeToAlchemy() {
     userInputArea.focus();
 
     document.getElementById('app-icon').textContent = '🧪';
-    document.getElementById('app-title').textContent = '3D 煉金術行動模擬';
     document.getElementById('app-badge').textContent = 'Stage 2';
-    
     document.getElementById('iceberg-visual').classList.add('hidden');
     document.getElementById('alchemy-visual').classList.remove('hidden');
 
-    const welcome = `看見了你的核心渴望：『${discoveredYearning}』。\n\n開啟「3D 煉金術」。第一步：【陰影接納】。想像這個脆弱部分是你需要親手接回的碎片。對它說一句成熟且充滿承諾的話？`;
+    const welcome = `看見了你的渴望：『${discoveredYearning}』。\n\n開啟「3D 煉金術」。第一步：【陰影接納】。作為成熟的你，請對內在脆弱的部分說一句有力量的話？`;
     chatContainer.appendChild(createMessage(welcome, false));
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
@@ -313,30 +307,25 @@ async function handleSend() {
     const typing = document.createElement('div');
     typing.id = 'typing-indicator';
     typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border p-3 rounded-2xl flex items-center shadow-sm"><div class="text-[10px] text-slate-400">分析深度脈絡中...</div></div>`;
+    typing.innerHTML = `<div class="bg-white border p-3 rounded-2xl flex items-center shadow-sm"><div class="text-[10px] text-slate-400 italic">分析中...</div></div>`;
     chatContainer.appendChild(typing);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
-    // 視覺更新：抓取使用者輸入
     if (currentMode === 'ICEBERG') {
         if (currentStep === 0) document.getElementById('layer-text-0').textContent = input;
         const stageInfo = STAGES.ICEBERG[currentStep];
         if (stageInfo?.targetLayer) {
-            const layer = document.getElementById(`layer-${stageInfo.targetLayer}`);
             const label = document.getElementById(`layer-text-${stageInfo.targetLayer}`);
-            layer.classList.add('active');
-            label.textContent = input;
-            label.classList.remove('italic');
+            document.getElementById(`layer-${stageInfo.targetLayer}`).classList.add('active');
+            label.textContent = input; label.classList.remove('italic');
             if (currentStep === 3) discoveredYearning = input;
         }
     } else {
         const stageInfo = STAGES.ALCHEMY[currentStep];
         if (stageInfo?.visualId) {
-            const visual = document.getElementById(stageInfo.visualId);
             const text = document.getElementById(stageInfo.visualId.replace('step', 'text'));
-            visual.classList.add('active');
-            text.textContent = input;
-            text.classList.remove('italic');
+            document.getElementById(stageInfo.visualId).classList.add('active');
+            text.textContent = input; text.classList.remove('italic');
         }
     }
 
@@ -345,7 +334,7 @@ async function handleSend() {
     chatContainer.appendChild(createMessage(coachResponse, false));
     chatHistory.push({ role: "coach", text: coachResponse });
 
-    // 若報錯（包含 429），重啟按鈕讓使用者重試
+    // 關鍵：如果失敗（報錯），解鎖輸入框讓使用者重試
     if (coachResponse.includes("❌") || coachResponse.includes("⚠️")) {
         userInputArea.disabled = false;
         sendBtn.disabled = false;
@@ -353,7 +342,7 @@ async function handleSend() {
     }
 
     currentStep++;
-    const currentStages = currentMode === 'ICEBERG' ? STAGES.ICEBERG : STAGES.ALCHEMY;
+    const currentStages = (currentMode === 'ICEBERG') ? STAGES.ICEBERG : STAGES.ALCHEMY;
     
     if (currentStep < currentStages.length) {
         stepIndicator.textContent = `Progress: ${currentStep + 1} / ${currentStages.length}`;
@@ -361,16 +350,14 @@ async function handleSend() {
         sendBtn.disabled = false;
         userInputArea.focus();
     } else {
-        userInputArea.disabled = true;
-        sendBtn.disabled = true;
         if (currentMode === 'ICEBERG') {
             inputWrapper.classList.add('hidden');
             document.getElementById('stage-transition-btn').classList.remove('hidden');
             completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "✨ 冰山深度解碼完成。";
+            completionMsg.textContent = "✨ 冰山深度分析已產出。";
         } else {
             completionMsg.classList.remove('hidden');
-            completionMsg.textContent = "🎉 行動演練完成！請匯出報告。";
+            completionMsg.textContent = "🎉 模擬完成！請匯出報告。";
         }
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -378,7 +365,7 @@ async function handleSend() {
 
 window.selectTool = function(toolName) {
     if (currentMode === 'ALCHEMY' && !userInputArea.disabled) {
-        userInputArea.value = `我決定使用工具箱中的【${toolName}】來賦予力量。`;
+        userInputArea.value = `我使用工具箱中的【${toolName}】。`;
         userInputArea.focus();
     }
 };
@@ -394,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modal-settings');
     const proxyIn = document.getElementById('proxy-url-input');
 
-    // 點擊 logo 5 下開啟設定
     document.getElementById('header-logo').onclick = () => {
         logoClickCount++;
         if(logoClickCount >= 5) {
