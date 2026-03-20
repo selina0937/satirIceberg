@@ -16,6 +16,18 @@ export default async function handler(req, res) {
 
   const { contents, systemInstruction, generationConfig, mode } = req.body;
 
+  // ========== Debug 模式：假資料秒回 ==========
+  // 當您在調整 HTML/CSS 或 PDF 匯出時，直接 return 假資料
+  // 這樣完全不會消耗 Google API 額度，也不會有 429 錯誤
+  
+  setTimeout(() => {
+    res.status(200).json({ 
+      text: "這是一段測試用的假 AI 回覆。我正在測試畫面排版與 PDF 匯出功能。由於現在是 Debug 模式，所以我不會消耗任何 API 額度。[STEP_COMPLETE]" 
+    });
+  }, 1000); // 模擬 1 秒的網路延遲
+
+  return; 
+
   // 支援雙 API Key 切換 (請在 Vercel Environment Variables 設定這兩個變數)
   const key1 = process.env.GEMINI_API_KEY_1 || process.env.GEMINI_API_KEY;
   const key2 = process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY;
