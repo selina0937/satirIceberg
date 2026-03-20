@@ -14,44 +14,52 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
 
-        /* 真實立體冰山容器 */
+        /* 真實冰山背景造型 */
         .iceberg-container {
-            background: linear-gradient(180deg, #f0f9ff 0%, #38bdf8 30%, #0369a1 100%);
-            border-radius: 20px; padding: 20px 10px; overflow: visible;
+            background: linear-gradient(180deg, #e0f2fe 0%, #0ea5e9 20%, #0369a1 100%);
+            border-radius: 20px; padding: 20px 10px; overflow: hidden; position: relative;
             box-shadow: inset 0 10px 30px rgba(0,0,0,0.1);
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1;
         }
+        /* SVG 冰山圖像 */
+        .iceberg-svg-bg { position: absolute; inset: 0; z-index: -1; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         
         .visual-layer {
             transition: all 0.5s ease-out; opacity: 0.1; transform: translateY(15px);
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.6); margin: 0 auto;
-            overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 10;
         }
         .visual-layer.active { opacity: 1; transform: translateY(0); }
         
-        .ai-q-box { background: rgba(240, 249, 255, 0.9); border-right: 1px solid rgba(0,0,0,0.05); padding: 12px 16px; width: 35%; display: flex; flex-col; justify-content: center;}
-        .user-a-box { padding: 12px 16px; width: 65%; display: flex; flex-col; justify-content: center;}
+        .ai-q-box { background: rgba(240, 249, 255, 0.9); border-right: 1px solid rgba(0,0,0,0.05); padding: 12px 16px; width: 35%; display: flex; flex-direction: column; justify-content: center; }
+        .user-a-box { padding: 12px 16px; width: 65%; display: flex; flex-direction: column; justify-content: center; }
         
-        /* 冰山層級漸層寬度與圓角 */
+        /* 冰山漸寬設計 */
         .layer-0 { width: 85%; max-width: 28rem; border-radius: 24px 24px 8px 8px; }
         .layer-1 { width: 90%; max-width: 30rem; border-radius: 8px; }
         .layer-2 { width: 95%; max-width: 32rem; border-radius: 8px; }
         .layer-3 { width: 98%; max-width: 34rem; border-radius: 8px; }
         .layer-4 { width: 100%; max-width: 36rem; background: #0f172a !important; border-radius: 8px 8px 24px 24px; border: 1px solid #1e293b; }
 
+        /* PDF 徹底解除截斷防線 */
         @media print {
             .no-print { display: none !important; }
-            html, body { height: auto !important; background: white !important; }
+            html, body, main, section, div, p { 
+                height: auto !important; max-height: none !important; 
+                overflow: visible !important; page-break-inside: auto !important; 
+            }
             main { display: block !important; }
             #chat-section { display: none !important; } 
             #visual-section { width: 100% !important; max-width: 100% !important; display: block !important; padding: 0 !important; background: white !important; }
-            .iceberg-container { background: none !important; box-shadow: none !important; padding: 0 !important; }
+            .iceberg-container { background: none !important; box-shadow: none !important; padding: 0 !important; display: block !important; }
+            .iceberg-svg-bg { display: none !important; }
             .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
             
             .visual-layer { 
-                opacity: 1 !important; transform: none !important; page-break-inside: avoid !important; margin-bottom: 15px !important; 
+                opacity: 1 !important; transform: none !important; page-break-inside: avoid !important; margin-bottom: 25px !important; 
                 border: 2px solid #333 !important; width: 100% !important; max-width: 100% !important; border-radius: 12px !important;
+                display: flex !important; flex-direction: row !important; background: #fff !important;
             }
             .ai-q-box { width: 35% !important; border-right: 2px solid #ddd !important; background: #f8fafc !important; }
             .user-a-box { width: 65% !important; }
@@ -78,7 +86,7 @@
     </div>
     <div class="flex items-center gap-2">
         <button id="btn-pdf" class="hidden text-xs px-4 py-2 bg-slate-900 hover:bg-black text-white rounded-full font-bold shadow-lg">匯出分析報告</button>
-        <button id="btn-reset" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-red-50 text-stone-500 rounded-full">重置探索</button>
+        <button id="btn-reset" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-red-50 text-stone-500 rounded-full">重置</button>
     </div>
 </header>
 
@@ -86,12 +94,12 @@
     <section id="chat-section" class="w-full md:w-[40%] flex flex-col h-[50vh] md:h-full border-r border-stone-200 bg-white z-20 shadow-2xl overflow-hidden no-print">
         <div class="p-4 bg-sky-50 border-b border-sky-100 shrink-0">
             <h2 class="text-sm font-bold text-sky-900">🛡️ 直擊潛意識教練</h2>
-            <p class="text-[10px] text-sky-700">先分析，再提問。引導找出深層渴望。</p>
+            <p class="text-[10px] text-sky-700">先分析，再提問。字數精簡，直搗核心。</p>
         </div>
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-4 bg-[#fcfcfc]"></div>
         <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
             <div id="input-area" class="flex flex-col gap-3">
-                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="請直接輸入您的回答（若不知道也可直說）..."></textarea>
+                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="請輸入您的回答（若不知道也可直說）..."></textarea>
                 <div class="flex justify-between items-center">
                     <span id="step-indicator" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Phase 1/5</span>
                     <button id="btn-send" class="bg-sky-700 hover:bg-sky-800 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出 ➤</button>
@@ -106,6 +114,7 @@
         </div>
     </section>
 
+    <!-- 右側圖像分析區 -->
     <section id="visual-section" class="w-full md:w-[60%] h-[50vh] md:h-full bg-stone-100 overflow-y-auto relative flex flex-col p-4 md:p-8">
         <div class="print-title">
             <h1 class="text-3xl font-bold">薩提爾潛意識冰山分析報告</h1>
@@ -114,8 +123,13 @@
 
         <div id="iceberg-visual" class="w-full flex-1 flex flex-col items-center">
             <div class="iceberg-container w-full max-w-2xl mx-auto">
+                <!-- SVG 冰山底圖 -->
+                <div class="iceberg-svg-bg w-full h-full pt-6">
+                    <svg viewBox="0 0 100 100" class="w-48 h-20 opacity-80" preserveAspectRatio="none"><polygon points="50,10 10,100 90,100" fill="#ffffff"/></svg>
+                    <svg viewBox="0 0 100 100" class="w-full max-w-md h-full opacity-20" preserveAspectRatio="none"><polygon points="10,0 90,0 100,100 0,100" fill="#ffffff"/></svg>
+                </div>
                 
-                <div id="layer-0" class="layer-0 visual-layer active border-t-4 border-sky-400">
+                <div id="layer-0" class="layer-0 visual-layer active border-t-4 border-sky-400 mt-4">
                     <div class="ai-q-box">
                         <h4 class="font-bold text-[10px] text-sky-700 uppercase mb-1">1. 行為與感受</h4>
                         <p class="text-[10px] text-slate-500">發生了什麼事？採取了什麼姿態？真實情緒是什麼？</p>
@@ -123,8 +137,8 @@
                     <div class="user-a-box"><div id="layer-text-0" class="text-[13px] text-slate-800">等待輸入事件...</div></div>
                 </div>
 
-                <div class="w-full h-0 border-b-2 border-dashed border-white/50 my-1 flex justify-center no-print">
-                    <span class="px-3 bg-sky-100 text-sky-600 text-[8px] font-bold -mt-2 rounded-full tracking-widest">水面界線</span>
+                <div class="w-full h-0 border-b-2 border-dashed border-white/60 my-2 flex justify-center no-print z-10">
+                    <span class="px-3 bg-sky-100 text-sky-700 text-[8px] font-bold -mt-2 rounded-full tracking-widest">水面界線</span>
                 </div>
 
                 <div id="layer-1" class="layer-1 visual-layer border-l-4 border-blue-400">
@@ -138,7 +152,7 @@
                 <div id="layer-2" class="layer-2 visual-layer border-l-4 border-indigo-400">
                     <div class="ai-q-box">
                         <h4 class="font-bold text-[10px] text-indigo-700 uppercase mb-1">3. 期待</h4>
-                        <p class="text-[10px] text-slate-500">在那種情況下，你原本希望事情怎麼發展？具體期待是什麼？</p>
+                        <p class="text-[10px] text-slate-500">在那種情況下，你原本希望事情怎麼發展？</p>
                     </div>
                     <div class="user-a-box"><div id="layer-text-2" class="text-[13px] text-slate-800 italic">尚未觸及</div></div>
                 </div>
@@ -164,19 +178,6 @@
     </section>
 </main>
 
-<div id="modal-settings" class="hidden modal-overlay no-print">
-    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-slate-900">
-        <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
-        <div class="space-y-4">
-            <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl text-sm" placeholder="https://your-app.vercel.app/api/chat">
-            <div class="flex gap-2 justify-end mt-4">
-                <button id="btn-modal-close" class="px-6 py-2 text-slate-400 font-bold">取消</button>
-                <button id="btn-modal-save" class="px-6 py-2 bg-slate-900 text-white rounded-full font-bold">更新設定</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
@@ -188,7 +189,11 @@ const STAGES = [
     { id: 4, isSummary: true }
 ];
 
-let currentStep = 0; let chatHistory = []; let discoveredYearning = "";
+let currentStep = 0;
+let chatHistory = [];
+// 這裡存儲 AI 對渴望的「分析」，而不是使用者的直接回答
+let analyzedYearning = "";
+
 let chatContainer, userInputArea, sendBtn, inputWrapper, pdfBtn, transitionBtn, stepIndicator;
 
 async function callGemini(userMessage) {
@@ -198,10 +203,10 @@ async function callGemini(userMessage) {
     const stage = STAGES[currentStep];
     const systemInstruction = `你是一位精通「薩提爾成長模型」的心理教練。任務：引導我探索內在冰山。
 【嚴格邏輯守則】
-1. **先分析，再提問**：必須先針對回答，給出簡短有力、直擊核心的分析，然後才拋出下一層的問題。
-2. **拯救不知道**：若使用者在此層回答『不知道』、『不清楚』，你必須根據前文，主動提供 2-3 個「可能的猜測選項」引導他思考。
-3. 不說廢話，不重複問已答過的事。
-${stage.isSummary ? "4. 這是最後一步。不要提問。針對使用者全冰山進行極具洞察力的總結分析，並恭喜完成。" : "4. 分析完畢後，精準拋出這個問題：" + stage.nextQ}
+1. **先分析，再提問**：必須先針對回答給出直擊核心的分析，然後才拋出下一層的問題。
+2. **拯救不知道**：若使用者回答『不知道』，你必須根據前文脈絡，主動提供 2-3 個「可能的心理動力猜測」引導他。
+3. **嚴格字數限制**：你的每一次回覆（包含分析與提問），總字數絕對不可超過 200 字，不准長篇大論。
+${stage.isSummary ? "4. 這是最後一步。不要提問。針對使用者全冰山進行精闢的總結分析，並恭喜完成。" : "4. 分析完畢後，精準拋出這個問題：" + stage.nextQ}
 語言：繁體中文。`;
 
     const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
@@ -243,21 +248,25 @@ async function handleSend() {
     
     const typing = document.createElement('div');
     typing.id = 'typing-indicator'; typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練分析中...</div></div>`;
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中...</div></div>`;
     chatContainer.appendChild(typing); chatContainer.scrollTop = chatContainer.scrollHeight;
     
+    // 更新圖像
     const layerEl = document.getElementById(`layer-${currentStep}`);
     const textEl = document.getElementById(`layer-text-${currentStep}`);
     if(layerEl && textEl) {
         layerEl.classList.add('active'); textEl.textContent = input; textEl.classList.remove('italic');
-        // 保存渴望 (即使說不知道，也存下來讓AI判斷)
-        if (currentStep === 3) discoveredYearning = input;
     }
 
     const coachResponse = await callGemini(input);
     if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     chatContainer.appendChild(createMessage(coachResponse, false));
     chatHistory.push({ role: "coach", text: coachResponse });
+
+    // 關鍵修復：在第 3 步（問渴望），教練的回覆就是對「渴望的分析」。我們把它存下來給第二階段用。
+    if (currentStep === 3 && !coachResponse.includes("❌")) {
+        analyzedYearning = coachResponse; 
+    }
 
     if (coachResponse.includes("❌")) { userInputArea.disabled = false; sendBtn.disabled = false; return; }
 
@@ -270,8 +279,8 @@ async function handleSend() {
         userInputArea.disabled = true; sendBtn.disabled = true;
         inputWrapper.classList.add('hidden'); transitionBtn.classList.remove('hidden'); pdfBtn.classList.remove('hidden'); 
         
-        // 將發現的渴望存入 LocalStorage，並加上完成標記，供第二階段讀取
-        localStorage.setItem('satir_discovered_yearning', discoveredYearning);
+        // 跨分頁傳遞 AI 專業分析出來的渴望
+        localStorage.setItem('satir_discovered_yearning', analyzedYearning);
         localStorage.setItem('satir_phase1_completed', 'true');
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -284,20 +293,12 @@ document.addEventListener('DOMContentLoaded', () => {
     stepIndicator = document.getElementById('step-indicator');
     
     document.getElementById('btn-start-alchemy').onclick = () => { window.location.href = 'actionSimulator.html'; };
-
-    let logoClickCount = 0; const modal = document.getElementById('modal-settings'); const proxyIn = document.getElementById('proxy-url-input');
-    document.getElementById('header-logo').onclick = () => {
-        logoClickCount++; if(logoClickCount >= 5) { modal.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; }
-    };
-    document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
-    document.getElementById('btn-modal-save').onclick = () => { localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim()); modal.classList.add('hidden'); location.reload(); };
-
-    pdfBtn.onclick = () => window.print();
+    document.getElementById('btn-pdf').onclick = () => window.print();
     sendBtn.onclick = handleSend;
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
     document.getElementById('btn-reset').onclick = () => location.reload();
 
-    chatContainer.appendChild(createMessage("您好。請直接描述一件最近讓你感到有情緒、受挫或引發衝突的具體事件。當時發生了什麼事？你採取了什麼反應？真實情緒是什麼？", false));
+    chatContainer.appendChild(createMessage("您好。請簡短描述一件最近讓你感到有情緒、受挫的事件。當時發生了什麼事？你採取了什麼應對姿態？真實情緒是什麼？", false));
 });
 </script>
 </body>
