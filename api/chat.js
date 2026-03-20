@@ -5,6 +5,7 @@
  */
 
 export default async function handler(req, res) {
+  // CORS 與安全性設定
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -37,7 +38,7 @@ export default async function handler(req, res) {
       systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         ...(generationConfig || {}),
-        maxOutputTokens: 2048, 
+        maxOutputTokens: 2048, // 足夠容納 200 字以內的回覆，並節省 Token
         temperature: 0.75,
         topP: 0.95
       }
