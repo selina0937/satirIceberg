@@ -10,7 +10,7 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #fafaf9; scroll-behavior: smooth; }
         .hero-gradient { background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%); }
         .tool-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tool-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .tool-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #38bdf8; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -52,7 +52,8 @@
             <p class="text-stone-500">循序漸進，從覺察到行動的完整轉化歷程。</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <!-- 工具 1: 冰山探索 -->
             <a href="satir_iceberg_spa.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
                 <div class="h-40 bg-sky-50 relative flex items-center justify-center overflow-hidden">
                     <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🧊</span>
@@ -71,6 +72,7 @@
                 </div>
             </a>
 
+            <!-- 工具 2: 3D 煉金術 -->
             <a href="actionSimulator.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
                 <div class="h-40 bg-amber-50 relative flex items-center justify-center overflow-hidden">
                     <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">✨</span>
@@ -88,6 +90,44 @@
                     </span>
                 </div>
             </a>
+
+            <!-- 工具 3: 關係修復指南 -->
+            <a href="nvc_assistant.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
+                <div class="h-40 bg-emerald-50 relative flex items-center justify-center overflow-hidden">
+                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🤝</span>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded uppercase tracking-wider">Tool</span>
+                        <h4 class="text-xl font-bold text-slate-800">關係修復指南 (非暴力溝通)</h4>
+                    </div>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                        專為伴侶、親子與職場設計。輸入您想說的話，AI 將協助轉換為不帶指責的「觀察、感受、需要、請求」。
+                    </p>
+                    <span class="text-emerald-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                        開啟對白助理 <span aria-hidden="true">→</span>
+                    </span>
+                </div>
+            </a>
+
+            <!-- 工具 4: 夢境解析 -->
+            <a href="jung_dream_analysis.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
+                <div class="h-40 bg-indigo-50 relative flex items-center justify-center overflow-hidden">
+                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🌙</span>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded uppercase tracking-wider">Tool</span>
+                        <h4 class="text-xl font-bold text-slate-800">榮格潛意識夢境解析</h4>
+                    </div>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                        透過榮格原型理論，協助您將昨晚的夢境視覺化，並解析潛意識想傳達給您的成長訊息與內在指引。
+                    </p>
+                    <span class="text-indigo-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                        開始解析夢境 <span aria-hidden="true">→</span>
+                    </span>
+                </div>
+            </a>
         </div>
     </main>
 
@@ -102,7 +142,7 @@
                     <div class="space-y-3 text-sm text-stone-300">
                         <p class="flex items-center gap-3"><span>📞</span> 客服專線：(02) 2345-6789</p>
                         <p class="flex items-center gap-3"><span>✉️</span> 電子郵件：support@satir-software.com</p>
-                        <p class="flex items-center gap-3"><span>🏢</span> 公司地址：新竹縣竹北市心靈成長區靜心大道 1 號</p>
+                        <p class="flex items-center gap-3"><span>🏢</span> 公司地址：台北市心靈成長區靜心大道 1 號</p>
                     </div>
                 </div>
                 
@@ -137,5 +177,3 @@
     </script>
 </body>
 </html>
-
-
