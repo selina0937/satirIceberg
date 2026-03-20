@@ -14,10 +14,12 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
 
+        /* 冰山容器：加上深藍色底色，讓圖片下方能完美延伸 */
         .iceberg-container {
             position: relative; border-radius: 20px; overflow: hidden;
             display: flex; flex-direction: column; align-items: center; z-index: 1;
             box-shadow: inset 0 10px 30px rgba(0,0,0,0.1); min-height: 80vh;
+            background-color: #0c1f36; 
         }
         
         .visual-layer {
@@ -38,7 +40,7 @@
         .layer-3 { width: 98%; max-width: 34rem; border-radius: 8px; }
         .layer-4 { width: 100%; max-width: 36rem; background: rgba(15, 23, 42, 0.95) !important; border-radius: 8px 8px 24px 24px; border: 1px solid #1e293b; margin-bottom: 30px; }
 
-        /* 完美 PDF 列印：解決文字顏色、截斷與背景問題 */
+        /* 完美 PDF 列印設定 */
         @media print {
             .no-print { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -49,9 +51,13 @@
             main { display: block !important; }
             #chat-section { display: none !important; } 
             #visual-section { width: 100% !important; max-width: 100% !important; display: block !important; padding: 0 !important; background: white !important; position: relative !important; }
-            .iceberg-container { background: none !important; box-shadow: none !important; padding: 0 !important; display: block !important; position: relative !important; min-height: 250mm !important; }
             
-            img#iceberg-bg-img { display: block !important; opacity: 0.4 !important; position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: -1 !important; }
+            .iceberg-container { background: none !important; box-shadow: none !important; padding: 0 !important; display: block !important; position: relative !important; }
+            img#iceberg-bg-img { display: none !important; } /* 列印時隱藏原圖，改用 fixed 背景 */
+
+            /* 專屬列印的浮動背景，讓每一頁都有冰山圖 */
+            #pdf-fixed-bg { display: block !important; position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0.3 !important; }
+            
             .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
             
             .visual-layer { 
@@ -63,17 +69,23 @@
             .user-a-box { width: 70% !important; background: #fff !important; }
             .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 12pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
             
-            /* 針對 Layer-4 強制覆蓋為淺色背景與黑字 */
+            /* 真實自我強制淺色底黑字 */
             .layer-4 { background: #fff !important; border-color: #333 !important; }
             .layer-4 .ai-q-box { background: #f8fafc !important; }
             .layer-4 .user-a-box { background: #fff !important; }
             .layer-4 p, .layer-4 div, .layer-4 h4, .layer-4 span, .layer-4 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
         }
         .print-title { display: none; }
+        #pdf-fixed-bg { display: none; } /* 螢幕模式下隱藏列印背景 */
         .modal-overlay { background: rgba(0,0,0,0.8); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-900">
+
+<!-- 專屬 PDF 列印的多頁背景 -->
+<div id="pdf-fixed-bg">
+    <img src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" class="w-full h-full object-cover object-top" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+</div>
 
 <header class="bg-white border-b border-stone-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
     <div class="flex items-center gap-4">
@@ -124,18 +136,18 @@
 
         <div id="iceberg-visual" class="w-full flex-1 flex flex-col items-center relative">
             <div class="iceberg-container w-full max-w-2xl mx-auto relative pt-6 pb-6">
-                <!-- 真實 PNG 冰山底圖 -->
-                <img id="iceberg-bg-img" src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Iceberg Background" class="absolute inset-0 w-full h-full object-cover object-top z-[0] opacity-80 pointer-events-none rounded-2xl" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <!-- 取消 object-cover，改用 h-auto，這樣圖片就不會因為容器拉長而跑版變形 -->
+                <img id="iceberg-bg-img" src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Iceberg Background" class="absolute top-0 left-0 w-full h-auto z-[0] opacity-80 pointer-events-none rounded-t-2xl" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
 
-                <!-- 虛線水面線：設定為絕對位置，對齊圖片的水面 480px -->
-                <div id="waterline" class="absolute top-[480px] left-0 w-full border-b-2 border-dashed border-white/80 flex justify-center z-10 no-print">
+                <!-- 虛線水面線：對齊圖片水面 (將 380px 根據您圖片的實際水面高度微調) -->
+                <div id="waterline" class="absolute top-[380px] left-0 w-full border-b-2 border-dashed border-white/80 flex justify-center z-10 no-print">
                     <span class="px-3 bg-white/80 backdrop-blur text-sky-700 text-[9px] font-bold -mt-2 rounded-full tracking-widest shadow-sm border border-sky-100">🌊 水面界線</span>
                 </div>
 
                 <div class="w-full relative z-10 flex flex-col items-center">
                     
-                    <!-- min-h-[480px] 防護層：確保後續圖層必定出現在水面線以下 -->
-                    <div class="w-full min-h-[480px] flex justify-center items-start pt-10">
+                    <!-- 防護層：透過 min-height 確保下方的圖層必定會出現在 380px (水面線) 之下 -->
+                    <div class="w-full min-h-[380px] flex justify-center items-start pt-6">
                         <div id="layer-0" class="layer-0 visual-layer active border-t-4 border-sky-400 mt-2">
                             <div class="ai-q-box">
                                 <h4 class="font-bold text-[10px] text-sky-700 uppercase mb-1">1. 行為與感受</h4>
