@@ -15,7 +15,6 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- 頂部導航 -->
     <header class="bg-white/90 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -32,7 +31,6 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero-gradient py-24 px-6 border-b border-stone-200">
         <div class="max-w-4xl mx-auto text-center">
             <h2 class="text-4xl md:text-5xl font-bold mb-6 text-stone-800 leading-tight">
@@ -48,7 +46,6 @@
         </div>
     </section>
 
-    <!-- 工具列表區 -->
     <main id="tools-section" class="flex-1 max-w-6xl mx-auto px-6 py-20 w-full scroll-mt-20">
         <div class="mb-12 flex flex-col items-center text-center">
             <h3 class="text-3xl font-bold text-stone-800 mb-2">🛠️ 心靈成長工具庫</h3>
@@ -56,7 +53,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <!-- 工具 1: 冰山探索 -->
             <a href="satir_iceberg_spa.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
                 <div class="h-40 bg-sky-50 relative flex items-center justify-center overflow-hidden">
                     <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🧊</span>
@@ -75,7 +71,6 @@
                 </div>
             </a>
 
-            <!-- 工具 2: 3D 煉金術 -->
             <a href="actionSimulator.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
                 <div class="h-40 bg-amber-50 relative flex items-center justify-center overflow-hidden">
                     <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">✨</span>
@@ -96,7 +91,6 @@
         </div>
     </main>
 
-    <!-- 關於本站與客服 -->
     <section id="about-section" class="bg-stone-900 text-stone-100 py-20 scroll-mt-0">
         <div class="max-w-4xl mx-auto px-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -115,15 +109,9 @@
                 <div class="bg-stone-800 p-6 rounded-2xl border border-stone-700">
                     <h4 class="font-bold text-white mb-4">聯絡我們</h4>
                     <form id="contact-form" class="space-y-4">
-                        <div>
-                            <input type="text" id="contact-name" required placeholder="您的姓名" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
-                        </div>
-                        <div>
-                            <input type="email" id="contact-email" required placeholder="您的電子信箱" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
-                        </div>
-                        <div>
-                            <textarea id="contact-msg" rows="3" required placeholder="想告訴我們的話..." class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 resize-none"></textarea>
-                        </div>
+                        <input type="text" required placeholder="您的姓名" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
+                        <input type="email" required placeholder="您的電子信箱" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
+                        <textarea rows="3" required placeholder="想告訴我們的話..." class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 resize-none"></textarea>
                         <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg transition-colors">送出訊息</button>
                     </form>
                     <div id="form-success" class="hidden mt-4 text-sm text-emerald-400 bg-emerald-900/30 p-3 rounded-lg text-center border border-emerald-800">
@@ -137,19 +125,13 @@
     <script>
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            // 模擬發送 API 動作
             const btn = this.querySelector('button');
-            btn.textContent = '發送中...';
-            btn.disabled = true;
-            
+            btn.textContent = '發送中...'; btn.disabled = true;
             setTimeout(() => {
                 this.reset();
-                btn.textContent = '送出訊息';
-                btn.disabled = false;
+                btn.textContent = '送出訊息'; btn.disabled = false;
                 document.getElementById('form-success').classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('form-success').classList.add('hidden');
-                }, 5000);
+                setTimeout(() => document.getElementById('form-success').classList.add('hidden'), 5000);
             }, 1000);
         });
     </script>
