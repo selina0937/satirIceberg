@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         ...(generationConfig || {}),
-        maxOutputTokens: 4096, // 解決 PDF 中 AI 話講到一半被截斷的關鍵
+        maxOutputTokens: 2048, // 足夠容納 200 字以內的回覆，並節省 Token
         temperature: 0.75,
         topP: 0.95
       }
