@@ -16,10 +16,17 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #86efac; border-radius: 10px; }
 
+        /* PDF 完美列印：徹底解除截斷與高度限制 */
         @media print {
             .no-print { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            html, body { height: auto !important; background: white !important; }
+            
+            /* 關鍵修復：強制所有容器取消高度限制與隱藏溢出 */
+            html, body, main, section, div, p { 
+                height: auto !important; max-height: none !important; 
+                overflow: visible !important; page-break-inside: auto !important; 
+            }
+            
             main { display: block !important; }
             #chat-section { display: none !important; } 
             #visual-section { width: 100% !important; display: block !important; padding: 0 !important; background: white !important; }
@@ -28,10 +35,16 @@
             .visual-layer { 
                 page-break-inside: avoid !important; margin-bottom: 25px !important; 
                 border: 2px solid #333 !important; border-radius: 12px !important;
-                display: flex !important; flex-direction: column !important; background: #fff !important;
+                display: block !important; background: #fff !important;
             }
             .ai-q-box { background: #f0fdf4 !important; border-bottom: 2px solid #ddd !important; padding: 15px !important; display: block !important; }
             .user-a-box { padding: 15px !important; display: block !important; }
+            .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 11pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
+            
+            /* 針對最後一個深色圖層，強制白底黑字列印 */
+            #layer-3 { background: #fff !important; border-color: #333 !important; }
+            #layer-3 .ai-q-box { background: #f0fdf4 !important; border-bottom-color: #ddd !important; }
+            #layer-3 h4, #layer-3 p, #layer-3 div, #layer-3 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
         }
         .print-title { display: none; }
     </style>
@@ -87,7 +100,7 @@
                 <div class="ai-q-box bg-emerald-50 border-b border-emerald-100 p-4"><h4 class="font-bold text-[12px] text-emerald-800 uppercase mb-1">1. 觀察 (Observation)</h4><p class="text-[10px] text-slate-500">不帶評論，客觀描述發生了什麼事？</p></div>
                 <div class="user-a-box p-5">
                     <div id="layer-text-0" class="text-sm text-slate-800 font-bold">等待輸入...</div>
-                    <div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed"></div>
+                    <div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed ai-analysis-text"></div>
                 </div>
             </div>
 
@@ -95,7 +108,7 @@
                 <div class="ai-q-box bg-emerald-50 border-b border-emerald-100 p-4"><h4 class="font-bold text-[12px] text-emerald-800 uppercase mb-1">2. 感受 (Feeling)</h4><p class="text-[10px] text-slate-500">看到這個客觀事實，你的情緒感受是什麼？</p></div>
                 <div class="user-a-box p-5">
                     <div id="layer-text-1" class="text-sm text-slate-800 font-bold italic">尚未觸及...</div>
-                    <div id="layer-analysis-1" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed"></div>
+                    <div id="layer-analysis-1" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed ai-analysis-text"></div>
                 </div>
             </div>
 
@@ -103,15 +116,15 @@
                 <div class="ai-q-box bg-emerald-50 border-b border-emerald-100 p-4"><h4 class="font-bold text-[12px] text-emerald-800 uppercase mb-1">3. 需要 (Need)</h4><p class="text-[10px] text-slate-500">這個感受背後，反映出你什麼心理需求未被滿足？</p></div>
                 <div class="user-a-box p-5">
                     <div id="layer-text-2" class="text-sm text-slate-800 font-bold italic">尚未觸及...</div>
-                    <div id="layer-analysis-2" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed"></div>
+                    <div id="layer-analysis-2" class="hidden mt-3 pt-3 border-t border-emerald-100 text-[12px] text-emerald-800 leading-relaxed ai-analysis-text"></div>
                 </div>
             </div>
 
-            <div id="layer-3" class="visual-layer bg-emerald-900 border border-emerald-800 rounded-3xl overflow-hidden shadow-xl mt-4">
+            <div id="layer-3" class="visual-layer bg-emerald-900 border border-emerald-800 rounded-3xl overflow-hidden shadow-xl mt-4 mb-10">
                 <div class="ai-q-box bg-emerald-800 border-b border-emerald-700 p-6"><h4 class="font-bold text-[12px] text-emerald-300 uppercase mb-1">4. 請求 (Request)</h4><p class="text-[10px] text-emerald-100">為了滿足需要，你能提出什麼具體、正向的行動請求？</p></div>
                 <div class="user-a-box p-6">
                     <div id="layer-text-3" class="text-[15px] text-emerald-50 font-bold italic">準備生成腳本中...</div>
-                    <div id="layer-analysis-3" class="hidden mt-4 pt-4 border-t border-emerald-700 text-[13px] text-emerald-200 leading-relaxed"></div>
+                    <div id="layer-analysis-3" class="hidden mt-4 pt-4 border-t border-emerald-700 text-[13px] text-emerald-200 leading-relaxed ai-analysis-text"></div>
                 </div>
             </div>
         </div>
@@ -121,8 +134,8 @@
 <script>
 const DEFAULT_PROXY_URL = ""; 
 const STAGES = [
-    { id: 0, nextQ: "第二步：感受 (Feeling)。看到這個客觀事實，放下腦中的想法，你單純的情緒感受是什麼？（例如：難過、生氣、害怕）" },
-    { id: 1, nextQ: "第三步：需要 (Need)。這個情緒的出現，是因為你內心的哪個『需要』沒有被滿足？（例如：我需要被尊重、我需要合作）" },
+    { id: 0, nextQ: "第二步：感受 (Feeling)。看到這個客觀事實，放下腦中的想法與評斷，單純的情緒感受是什麼？（例如：難過、生氣、害怕）" },
+    { id: 1, nextQ: "第三步：需要 (Need)。這個情緒的出現，是因為你內心的哪個『需要』沒有被滿足？（例如：我需要被尊重、我需要合作、需要安全感）" },
     { id: 2, nextQ: "第四步：請求 (Request)。為滿足這個需要，你可以對對方提出什麼『具體、正向、可執行』的行動請求？請試著把前面的觀察、感受、需要連起來，寫下一句完整的話。" },
     { id: 3, isSummary: true }
 ];
@@ -139,12 +152,12 @@ async function callGemini(userMessage) {
     if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
 
     const stage = STAGES[currentStep];
-    const systemInstruction = `你是非暴力溝通(NVC)助理。
+    const systemInstruction = `你是一位專業的非暴力溝通(NVC)引導助理。
 【嚴格守則】
-1. **嚴格字數限制**：每次回覆（包含分析與指令）總字數『絕對不可超過 300 字』！
-2. **分析與糾正**：必須先判斷使用者的回答是否符合NVC原則（例如：把評論當成觀察，或把想法當成感受）。若有誤，請溫和糾正並給出正確示範。若使用者回答『不知道』，直接給予 2 個符合情境的範例。此時不准輸出 [STEP_COMPLETE]。
-3. **過關標記**：若回答正確或使用者選了範例，在回覆最尾端加上 [STEP_COMPLETE]。
-${stage.isSummary ? "4. 這是最後一步。不要提問。針對 NVC 對白給予微調建議，加上 [STEP_COMPLETE]。" : "4. 若過關，拋出指令：" + stage.nextQ}
+1. **字數精簡與完整**：每次回覆字數請控制在 200 字左右，但『必須保證句子完整結束，絕對不可話講到一半截斷』。
+2. **分析與糾正**：必須先判斷使用者的回答是否符合NVC原則（例如：把評論當成觀察，或把想法當成感受）。若有誤，請溫和糾正並給出正確示範。若使用者回答『不知道』，請主動提供 2 個符合情境的選項讓他參考。此時不准輸出 [STEP_COMPLETE]。
+3. **過關標記**：若使用者的回答符合原則，或已修正正確，請在你回覆的「最尾端」加上 [STEP_COMPLETE] 標記。若不符合，『絕對不要』加上此標記。
+${stage.isSummary ? "4. 這是最後一步。不要提問。針對 NVC 完整對白給予最終微調建議與肯定，並加上 [STEP_COMPLETE]。" : "4. 若評估過關，請直接在回覆的最後拋出這個問題繼續引導：" + stage.nextQ}
 語言：繁體中文。`;
 
     const context = chatHistory.slice(-4).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
@@ -209,7 +222,7 @@ async function handleSend() {
         
         if(layerEl && textEl && analysisEl) {
             layerEl.classList.add('active'); textEl.textContent = input; textEl.classList.remove('italic');
-            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">NVC 分析：</span><br>${cleanResponse}`;
+            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">NVC 分析與建議：</span><br>${cleanResponse}`;
             analysisEl.classList.remove('hidden');
         }
 
@@ -238,10 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
     sendBtn.onclick = handleSend;
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
 
-    const welcome = `歡迎來到非暴力溝通助理。\n\n第一步：觀察 (Observation)。請想一件最近引發你負面情緒的事。請試著用「攝影機拍得到」的客觀語言描述它，不要加入您的批評或猜測。（例如：你昨天遲到半小時。而不是：你總是不在乎我的時間。）`;
+    const welcome = `歡迎來到非暴力溝通助理。\n\n第一步：觀察 (Observation)。請想一件最近引發你負面情緒的事。請試著用「攝影機拍得到」的客觀語言描述它，不要加入您的批評或主觀猜測。（例如：你昨天遲到半小時。而不是：你總是不在乎我的時間。）`;
     chatContainer.appendChild(createMessage(welcome, false));
 });
 </script>
 </body>
 </html>
-
