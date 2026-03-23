@@ -1,7 +1,7 @@
 /**
  * 薩提爾全效工具 - 專用後端代理 (Vercel Serverless Function)
  * 使用 Gemini 2.5 Flash 模型
- * 支援四重 API KEY 分流與 Token 計算
+ * 支援四重 API KEY 分流、Token 計算與防截斷設定
  */
 
 export default async function handler(req, res) {
@@ -37,10 +37,17 @@ export default async function handler(req, res) {
       systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         ...(generationConfig || {}),
-        maxOutputTokens: 1024, 
+        maxOutputTokens: 2048, // 確保有足夠的長度把話說完
         temperature: 0.75,
         topP: 0.95
-      }
+      },
+      // 關閉預設的安全阻擋，防止正常情緒描述被誤判截斷
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+      ]
     };
 
     const response = await fetch(url, {
