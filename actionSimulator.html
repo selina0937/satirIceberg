@@ -50,6 +50,9 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-900">
 
+<!-- 隱藏的 Token 計算器觸發區塊 -->
+<div id="token-secret-btn" class="fixed bottom-0 right-0 w-16 h-16 z-50 cursor-default" title="雙擊查看 Token 消耗" ondblclick="showTokenUsage()"></div>
+
 <header class="bg-white border-b border-amber-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full">
@@ -62,7 +65,7 @@
     </div>
     <div class="flex items-center gap-2">
         <button id="btn-pdf" class="hidden text-xs px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-full font-bold shadow-lg">匯出行動腳本</button>
-        <button onclick="window.location.href='satir_iceberg_spa.html'" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-500 rounded-full transition-all">🔍 返回冰山重新探索</button>
+        <button onclick="window.location.href='satir_iceberg_spa.html'" class="text-xs px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-500 rounded-full transition-all font-bold shadow-sm">🔍 返回冰山重新探索</button>
     </div>
 </header>
 
@@ -76,7 +79,7 @@
         <div class="p-4 bg-white border-t border-amber-100 shrink-0 z-30">
             
             <div id="input-area" class="flex flex-col gap-3 hidden">
-                <textarea id="user-input" rows="3" class="w-full resize-none rounded-xl border border-amber-300 p-3 text-sm focus:ring-2 focus:ring-amber-600 bg-amber-50" placeholder="請輸入... (若不知道怎麼寫，可直說)"></textarea>
+                <textarea id="user-input" rows="3" class="w-full resize-none rounded-xl border border-amber-300 p-3 text-sm focus:ring-2 focus:ring-amber-600 bg-amber-50 shadow-inner" placeholder="請輸入... (若不知道怎麼寫，可直說)"></textarea>
                 <div class="flex justify-between items-center">
                     <span id="step-indicator" class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Step 1/4</span>
                     <button id="btn-send" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出轉化 ➤</button>
@@ -107,6 +110,7 @@
             <p class="text-stone-500 mt-2">脆弱接納、資源提取與一致性行動腳本</p>
         </div>
 
+        <!-- 工具箱 -->
         <div class="bg-white/80 border border-amber-200 rounded-3xl p-5 w-full max-w-2xl mx-auto shadow-sm mb-4 no-print text-center relative z-10">
             <h3 class="text-amber-800 font-bold mb-3 text-[10px] uppercase tracking-widest">自尊維護工具箱 (限選一次)</h3>
             <div class="grid grid-cols-4 lg:grid-cols-7 gap-2" id="toolbox-grid">
@@ -132,14 +136,13 @@
                     <span class="text-2xl mb-1">❤️</span><span class="text-[9px] font-bold text-slate-700">心</span>
                 </div>
             </div>
-            <!-- 動態工具說明區，不會被排版遮擋 -->
+            <!-- 動態說明面板 -->
             <div id="tool-info-box" class="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-left text-[11px] text-amber-900 min-h-[4rem] flex items-center transition-all">
                 💡 將滑鼠移至上方工具圖示，查看用途說明與對話範例。
             </div>
         </div>
 
         <div class="w-full max-w-2xl mx-auto space-y-4 relative z-0">
-            <!-- Layer 0 -->
             <div id="layer-0" class="visual-layer active bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-sm flex flex-row">
                 <div class="ai-q-box"><h4 class="font-bold text-[10px] text-amber-800 uppercase mb-2">1. 徹底接納</h4><p class="text-[10px] text-slate-600">對內在脆弱的自己說一句充滿力量與保證的話？</p></div>
                 <div class="user-a-box">
@@ -157,7 +160,7 @@
             </div>
 
             <div id="layer-2" class="visual-layer bg-white border border-red-200 rounded-2xl overflow-hidden shadow-sm flex flex-row">
-                <div class="ai-q-box bg-red-50 border-red-200"><h4 class="font-bold text-[10px] text-red-800 uppercase mb-2">3. 上帝視角</h4><p class="text-[10px] text-slate-600">從天花板的視角看，你會給畫面中的自己什麼具體建議？</p></div>
+                <div class="ai-q-box bg-red-50 border-red-200"><h4 class="font-bold text-[10px] text-red-800 uppercase mb-2">3. 上帝視角</h4><p class="text-[10px] text-slate-600">從天花板視角看，你會給畫面中的自己什麼具體建議？</p></div>
                 <div class="user-a-box">
                     <div id="layer-text-2" class="text-[13px] text-slate-800 font-bold italic">尚未切換...</div>
                     <div id="layer-analysis-2" class="hidden mt-3 pt-3 border-t border-red-100 text-[12px] text-red-800 leading-relaxed ai-analysis-text"></div>
@@ -165,10 +168,9 @@
             </div>
 
             <div id="layer-3" class="visual-layer bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-row mt-4 mb-8">
-                <div class="ai-q-box bg-slate-800 border-slate-700"><h4 class="font-bold text-[11px] text-amber-400 uppercase mb-2">Final: 一致性腳本</h4><p class="text-[10px] text-slate-300">結合真實感受、同理對方並提出具體做法。寫下這段對話。</p></div>
+                <div class="ai-q-box bg-slate-800 border-slate-700"><h4 class="font-bold text-[11px] text-amber-400 uppercase mb-2">Final: 一致性對白</h4><p class="text-[10px] text-slate-300">結合感受、同理對方並提出具體做法。試著寫下這段話。</p></div>
                 <div class="user-a-box p-6">
                     <div id="layer-text-3" class="text-[15px] text-amber-50 font-bold italic">準備生成腳本中...</div>
-                    <!-- 腳本分析將印在 PDF 中 -->
                     <div id="layer-analysis-3" class="hidden mt-4 pt-4 border-t border-slate-700 text-[13px] text-amber-200 leading-relaxed ai-analysis-text"></div>
                 </div>
             </div>
@@ -197,10 +199,15 @@ const TOOLS_INFO = {
 };
 
 let currentStep = 0; let chatHistory = []; let toolLocked = false;
+let sessionTokenCount = 0; // Token 追蹤變數
 let discoveredYearning = localStorage.getItem('satir_discovered_yearning') || "";
 let originalEvent = localStorage.getItem('satir_event_context') || "未提供具體事件";
 
 let chatContainer, userInputArea, sendBtn, pdfBtn, stepIndicator, completionMsg, inputWrapper, directEntryArea, directInput;
+
+function showTokenUsage() {
+    alert(`📊 本回合累計使用 Token 數: ${sessionTokenCount}\n\n*此數據包含輸入與輸出的總和。可用於後續收費計價。`);
+}
 
 window.showToolInfo = function(name) {
     if(!toolLocked) document.getElementById('tool-info-box').innerHTML = TOOLS_INFO[name];
@@ -226,8 +233,8 @@ async function callGemini(userMessage) {
 使用者的底層渴望：【${discoveredYearning}】
 
 【嚴格守則】
-1. **嚴格字數限制**：每次回覆（包含分析與指令）總字數『絕對不可超過 200 字』！必須極度精簡。
-2. **拯救不知道/不會寫**：若使用者回答『不知道』或寫不好，你必須主動基於上方的【衝突事件】與【渴望】，直接給予「2個具體的示範對白或建議選項」，要求他選擇或參考。此時『絕對不要』輸出 [STEP_COMPLETE]。
+1. **嚴格字數限制**：每次回覆總字數『絕對不可超過 300 字』！必須極度精簡。
+2. **拯救不會寫**：若使用者回答『不知道』或寫不好，你必須主動基於上方的【衝突事件】與【渴望】，直接給予「2個具體的示範對白或建議選項」，要求他選擇或參考。此時『絕對不要』輸出 [STEP_COMPLETE]。
 3. **過關標記**：若使用者給出了具體的回答或完成了練習，請在你回覆的「最尾端」加上 [STEP_COMPLETE] 標記，代表本階段過關。
 4. **禁止幻覺**：絕對不要自己列出工具箱清單。
 ${stage.isSummary ? "5. 這是最後一步。不要提問。給予腳本總結肯定，並加上 [STEP_COMPLETE]。" : "5. 若過關，拋出這段指令：" + stage.nextQ}
@@ -241,7 +248,11 @@ ${stage.isSummary ? "5. 這是最後一步。不要提問。給予腳本總結�
             body: JSON.stringify({ contents: context, systemInstruction, mode: 'ALCHEMY' })
         });
         if (response.ok) {
-            const result = await response.json(); return result.text;
+            const result = await response.json(); 
+            if (result.tokenUsage && result.tokenUsage.totalTokenCount) {
+                sessionTokenCount += result.tokenUsage.totalTokenCount;
+            }
+            return result.text;
         } else {
             return `❌ 伺服器傳回異常 (HTTP ${response.status})`;
         }
@@ -313,7 +324,7 @@ async function handleSend() {
         
         if(layerEl && textEl && analysisEl) {
             layerEl.classList.add('active'); textEl.textContent = input; textEl.classList.remove('italic');
-            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">煉金師回饋：</span><br>${cleanResponse}`;
+            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">煉金師建議：</span><br>${cleanResponse}`;
             analysisEl.classList.remove('hidden');
         }
 
@@ -353,7 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.appendChild(createMessage("歡迎來到 3D 行動煉金模擬器！\n\n系統偵測到您尚未完成冰山探索。\n您可以點擊左下方【返回重新探索】，或直接在輸入框告訴我您的核心渴望。", false));
         document.getElementById('btn-submit-yearning').onclick = () => {
             const val = directInput.value.trim();
-            // 第一層前端防呆：如果使用者一開始就說不知道，直接跳出提示阻擋，節省 Token
             if (val === "不知道" || val === "不清楚" || val === "沒有") {
                 alert("若您還不清楚自己的核心渴望，建議您先點擊「返回重新探索」，讓 AI 教練協助您釐清盲點！");
                 return;
