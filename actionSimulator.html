@@ -50,7 +50,6 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-900">
 
-<!-- 隱藏的 Token 計算器觸發區塊 -->
 <div id="token-secret-btn" class="fixed bottom-0 right-0 w-16 h-16 z-50 cursor-default" title="雙擊查看 Token 消耗" ondblclick="showTokenUsage()"></div>
 
 <header class="bg-white border-b border-amber-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
@@ -110,7 +109,6 @@
             <p class="text-stone-500 mt-2">脆弱擁抱、內在百寶箱與真心話劇本</p>
         </div>
 
-        <!-- 內在百寶箱 -->
         <div class="bg-white/80 border border-amber-200 rounded-3xl p-5 w-full max-w-2xl mx-auto shadow-sm mb-4 no-print text-center relative z-10">
             <h3 class="text-amber-800 font-bold mb-3 text-[10px] uppercase tracking-widest">內在百寶箱 (限選一項法寶)</h3>
             <div class="grid grid-cols-4 lg:grid-cols-7 gap-2" id="toolbox-grid">
@@ -136,16 +134,14 @@
                     <span class="text-2xl mb-1">❤️</span><span class="text-[9px] font-bold text-slate-700">溫柔之心</span>
                 </div>
             </div>
-            <!-- 動態說明面板 -->
             <div id="tool-info-box" class="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-left text-[11px] text-amber-900 min-h-[4rem] flex items-center transition-all">
                 💡 將滑鼠移至上方百寶箱法寶，查看用途說明與保護自己的範例。
             </div>
         </div>
 
         <div class="w-full max-w-2xl mx-auto space-y-4 relative z-0">
-            <!-- Layer 0 -->
             <div id="layer-0" class="visual-layer active bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-sm flex flex-row">
-                <div class="ai-q-box"><h4 class="font-bold text-[10px] text-amber-800 uppercase mb-2">1. 擁抱脆弱</h4><p class="text-[10px] text-slate-600">對內心受傷的小孩說一句充滿保證與安慰的話？</p></div>
+                <div class="ai-q-box"><h4 class="font-bold text-[10px] text-amber-800 uppercase mb-2">1. 擁抱脆弱</h4><p class="text-[10px] text-slate-600">對內在渴望的自己說一句充滿力量與保證的話？</p></div>
                 <div class="user-a-box">
                     <div id="layer-text-0" class="text-[13px] text-slate-800 font-bold">等待輸入...</div>
                     <div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t border-amber-100 text-[12px] text-amber-800 leading-relaxed ai-analysis-text"></div>
@@ -182,34 +178,11 @@
 <script>
 const DEFAULT_PROXY_URL = ""; 
 
-const STAGE_GOALS = [
-    `▶ 第一步：擁抱脆弱，成為自己的靠山
-    【引導目標】讓使用者接納剛發現的內在脆弱，不帶批判地給予自己安全感。
-    【話術指南】
-    1. 先溫柔地肯定使用者的勇敢：「你能看見自己內心那個『害怕/委屈/受傷』的真實聲音，這非常不容易，也非常勇敢。」
-    2. 引導對話：「如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？」`,
-
-    `▶ 第二步：開啟「內在百寶箱」，找回主導權
-    【引導目標】將焦點從「受害者」轉為「主導者」，透過隱喻工具賦予行動力量。
-    【話術指南】
-    1. 告訴使用者，面對這個僵局，我們不需要赤手空拳。想像你心裡有一個專屬的「內在百寶箱」。
-    2. 提問：「面對你現在的困境，你最想從畫面上方的百寶箱裡拿出哪一樣法寶帶在身上？你會怎麼使用它來保護或支持自己？」`,
-
-    `▶ 第三步：升空切換，啟動「教練視角」
-    【引導目標】幫助使用者抽離當下的情緒漩渦，用中立、客觀的視角看清互動死結。
-    【話術指南】
-    1. 引導抽離：「現在，讓我們帶著剛才拿到的法寶，稍微從這個情緒裡退出來。想像你靈魂出竅，變成電影院裡的觀眾，或者天花板上的一隻小飛蟲。你看著大銀幕上，那個『帶著法寶、充滿力量的你』，以及『對方』，正在互動。」
-    2. 提問：「從這個完全客觀、像是一個旁觀教練的視角來看，這兩個人卡在了什麼盲點？你會給畫面中那個『你』什麼具體的行動建議，讓他能打破這個一直受傷的迴圈？」`,
-
-    `▶ 第四步：預演未來，寫下你的「真心話劇本」
-    【引導目標】將領悟化為實際的溝通台詞，在腦海中鋪設成功應對的神經迴路。
-    【話術指南】
-    1. 說明溝通公式：真正的溝通不需要委屈討好，也不需要生氣指責，我們只要做到「照顧自己＋理解對方＋點出現實」。
-    2. 引導寫劇本：請預想下一次再遇到一模一樣的衝突場景時，試著套用這個句型寫下台詞：
-       - 「我理解你可能覺得... (不帶攻擊地說出對方的難處)」
-       - 「但是，這樣會讓我感到... (誠實說出自己的底線與感受)」
-       - 「所以接下來，我會 / 我們可以... (給出具體作法或暫停的指令)」
-    3. 腦內演練：「請你現在把這段話寫出來。想像你深吸一口氣，用平靜而堅定的語氣對他說出這段話，說完後你轉身去照顧自己。感覺一下，當你這麼做的時候，你的身體和心裡有什麼感覺？」`
+const STAGES = [
+    { id: 0, nextQ: "第二步：提取資源。請從畫面上方的『內在百寶箱』點選一個最需要的法寶，你打算如何用它保護或支持自己？" },
+    { id: 1, nextQ: "第三步：教練視角。想像你是天花板上的飛蟲或旁觀的教練，客觀看著『帶著法寶的你』與『對方』互動。你會給這個自己什麼具體建議？" },
+    { id: 2, nextQ: "第四步：真心話劇本。想像下次遇到相同場景。請寫下一段對話，包含：1.同理對方的難處 2.表達自己的底線感受 3.具體作法。" },
+    { id: 3, isSummary: true }
 ];
 
 const TOOLS_INFO = {
@@ -251,24 +224,38 @@ async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
     if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
 
+    // 動態生成該階段的專屬目標指引
+    const stageGoal = [
+        `▶ 第一步：擁抱脆弱，成為自己的靠山\n【引導目標】讓使用者接納剛發現的內在脆弱或渴望，給予自己支持。\n【話術指南】\n1. 先溫柔地肯定使用者的勇敢。\n2. 根據使用者的渴望【${discoveredYearning}】，靈活引導對話：「想像你內心那個『渴望...』的自己站在面前。作為一個充滿力量的大人，你會對他說一句什麼樣『充滿保證與力量』的話？」(請務必貼合使用者的真實渴望，例如渴望價值，就引導給予肯定的話語，不要生硬套用安全感小孩的範本)。`,
+        `▶ 第二步：開啟「內在百寶箱」，找回主導權\n【引導目標】將焦點從「受害者」轉為「主導者」，透過隱喻工具賦予行動力量。\n【話術指南】\n1. 告訴使用者，面對這個僵局，我們不需要赤手空拳。想像你心裡有一個專屬的「內在百寶箱」。\n2. 提問：「面對你現在的困境，你最想從畫面上方的百寶箱裡拿出哪一樣法寶帶在身上？你會怎麼使用它來保護或支持自己？」`,
+        `▶ 第三步：升空切換，啟動「教練視角」\n【引導目標】幫助使用者抽離當下的情緒漩渦，用中立、客觀的視角看清互動死結。\n【話術指南】\n1. 引導抽離：「現在，讓我們帶著剛才拿到的法寶，稍微從這個情緒裡退出來。想像你變成天花板上的一隻小飛蟲或客觀的教練。你看著大銀幕上，那個『帶著法寶、充滿力量的你』，以及『對方』，正在互動。」\n2. 提問：「從這個完全客觀的視角來看，這兩個人卡在了什麼盲點？你會給畫面中那個『你』什麼具體的行動建議，讓他能打破這個一直受傷的迴圈？」`,
+        `▶ 第四步：預演未來，寫下你的「真心話劇本」\n【引導目標】將領悟化為實際的溝通台詞。\n【話術指南】\n1. 說明溝通公式：「照顧自己＋理解對方＋點出現實」。\n2. 引導寫劇本：請預想下一次再遇到相同的衝突場景時，試著套用句型寫下台詞：\n   - 「我理解你可能覺得... (同理對方)」\n   - 「但是，這樣會讓我感到... (表達底線/感受)」\n   - 「所以接下來，我會 / 我們可以... (給出具體作法)」\n3. 請使用者把這段話寫出來。`
+    ][currentStep];
+
+    const nextStepInstruction = STAGES[currentStep].isSummary
+        ? "【下一步指令】這是最後一步。針對腳本給予總結肯定，並務必在最尾端加上 [STEP_COMPLETE] 標記。不要再提問。"
+        : "【下一步指令】若使用者回答過關，請先給予簡短回饋，然後『務必』拋出以下問題繼續引導：" + STAGES[currentStep].nextQ + "\n並且在回覆的最尾端加上 [STEP_COMPLETE] 標記。";
+
     const systemInstruction = `【角色設定】
-你現在是一位溫暖、敏銳且極具實踐力的「內在煉金教練」。你整合了深度的心理學智慧，但你「絕對不使用」任何艱澀的心理學專有名詞（如：冰山底層、第三位置、陰影整合、重新撫育等）。你的說話風格像是一位充滿智慧與包容的知心好友。
+你現在是一位溫暖、敏銳且極具實踐力的「內在煉金教練」。你不使用艱澀的心理學專有名詞，說話風格像充滿智慧的知心好友。
 
 使用者最初衝突事件：【${originalEvent}】
-使用者底層渴望：【${discoveredYearning}】
+使用者的底層渴望：【${discoveredYearning}】
 
 【最高互動守則】
-1. 絕對的白話與具象化：把抽象的心理學轉化為日常比喻。
-2. 每次只推進一步：絕對不要一次丟出兩個以上的步驟或問題。必須等待使用者回答後，先給予簡短、溫暖的同理與肯定，再自然引導到下一步。
-3. 賦權而非說教：不要給「你應該怎麼做」的標準答案，而是透過提問，讓力量從使用者心裡長出來。
-4. 字數限制：每次回覆字數嚴格控制在 200 字以內，語氣對話化。必須保證句子完整結束，絕對不可話講到一半截斷。
-5. 分析與糾正防呆：
-   - 若在工具選擇與困境不適當，請溫和引導指出盲點並示範。
-   - 若使用者回答「不知道/想不到」或寫不出對白，請主動提供 2~3 個符合情境的具體選項或示範台詞讓他選擇參考。在使用者選出或修正正確前，不准進入下一步，也『絕對不要』輸出 [STEP_COMPLETE]！
-6. 過關標記：只有當使用者給出了具體的回答或完成了該階段的練習，請在你回覆的「最尾端」加上 [STEP_COMPLETE] 標記。
+1. **白話與具象化**：把抽象心理學轉化為日常比喻。
+2. **每次只推進一步**：絕對不要一次丟出兩個以上的步驟或問題。
+3. **字數限制**：每次回覆嚴格控制在 200 字以內，語氣對話化。必須保證句子完整結束。
+4. **分析與糾正防呆**：
+   - 若使用者回答「不知道/想不到」或寫不出對白，請主動提供 2~3 個符合情境的具體選項或示範讓他選擇參考。此時『絕對不要』輸出 [STEP_COMPLETE]！
+5. **過關與推進（極度重要）**：
+   - 當使用者給出具體回答並完成當前階段的練習，你必須判定過關。
+   - 一旦過關，你『必須』確實執行下方【下一步指令】的內容，絕對不可漏掉下一步的提問。
 
-【目前執行階段：請依此階段的目標與指南進行回覆與引導】
-${STAGE_GOALS[currentStep]}
+【目前執行階段：請依此階段的目標與指南進行回覆】
+${stageGoal}
+
+${nextStepInstruction}
 `;
 
     const context = chatHistory.slice(-4).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
@@ -315,9 +302,9 @@ function startJourney(yearning, isFromIceberg = false) {
         uiIntro.innerHTML = `<span class="font-bold">來自 AI 對您冰山渴望的分析：</span><br><span class="italic mt-1 block">『${discoveredYearning}』</span><div class="mt-3"><button onclick="window.location.href='satir_iceberg_spa.html'" class="text-xs bg-white px-3 py-1 rounded-full text-amber-700 hover:bg-amber-50 shadow-sm transition-all border border-amber-200">🔍 不準確？返回重新探索</button></div>`;
         chatContainer.appendChild(uiIntro);
         
-        welcome = `你好！我是你的專屬內在煉金教練。我知道在人際或親密關係中感到迷惘和受傷，是非常耗費心力的事。但請放心，今天我們不講大道理，也不去改變別人。我們要把焦點放回你身上，幫你把那些不舒服的感覺，提煉成保護你、支持你的力量。\n\n現在開始第一步：擁抱脆弱。如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？`;
+        welcome = `你好！我是你的專屬內在煉金教練。我知道在人際或親密關係中感到迷惘和受傷，是非常耗費心力的事。但請放心，今天我們不講大道理，也不去改變別人。我們要把焦點放回你身上，幫你把那些不舒服的感覺，提煉成保護你、支持你的力量。\n\n現在開始第一步：擁抱脆弱。請想像你內心那個『渴望【${discoveredYearning}】的自己』，正站在你面前。現在的你，作為一個充滿力量與愛的大人，你會對這個內在的自己說一句什麼樣『充滿保證與力量』的話，來支持他？`;
     } else {
-        welcome = `好的，確認了您的核心渴望是：【${discoveredYearning}】。\n\n現在開始第一步：擁抱脆弱。如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？`;
+        welcome = `好的，確認了您的核心渴望是：【${discoveredYearning}】。\n\n現在開始第一步：擁抱脆弱。請想像你內心那個『渴望【${discoveredYearning}】的自己』，正站在你面前。現在的你，作為一個充滿力量與愛的大人，你會對這個內在的自己說一句什麼樣『充滿保證與力量』的話，來支持他？`;
     }
 
     chatContainer.appendChild(createMessage(welcome, false));
