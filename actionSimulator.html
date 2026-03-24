@@ -304,13 +304,12 @@ function createMessage(text, isUser) {
     return wrapper;
 }
 
-function startJourney(yearning) {
+function startJourney(yearning, isFromIceberg = false) {
     discoveredYearning = yearning;
     directEntryArea.classList.add('hidden'); inputWrapper.classList.remove('hidden');
     
-    // 如果是從冰山帶過來的，顯示系統提示；若是直接輸入，則稍微改口吻
     let welcome = "";
-    if (localStorage.getItem('satir_phase1_completed') === 'true') {
+    if (isFromIceberg) {
         const uiIntro = document.createElement('div');
         uiIntro.className = "bg-amber-100 p-4 rounded-xl mb-4 text-sm text-amber-900 border border-amber-200";
         uiIntro.innerHTML = `<span class="font-bold">來自 AI 對您冰山渴望的分析：</span><br><span class="italic mt-1 block">『${discoveredYearning}』</span><div class="mt-3"><button onclick="window.location.href='satir_iceberg_spa.html'" class="text-xs bg-white px-3 py-1 rounded-full text-amber-700 hover:bg-amber-50 shadow-sm transition-all border border-amber-200">🔍 不準確？返回重新探索</button></div>`;
@@ -318,7 +317,7 @@ function startJourney(yearning) {
         
         welcome = `你好！我是你的專屬內在煉金教練。我知道在人際或親密關係中感到迷惘和受傷，是非常耗費心力的事。但請放心，今天我們不講大道理，也不去改變別人。我們要把焦點放回你身上，幫你把那些不舒服的感覺，提煉成保護你、支持你的力量。\n\n現在開始第一步：擁抱脆弱。如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？`;
     } else {
-        welcome = `你好！我是你的專屬內在煉金教練。我知道在關係中受傷非常耗費心力。今天我們不講大道理，我們要把焦點放回你身上，把不舒服的感覺提煉成保護你的力量。\n\n確認了您的核心渴望是：【${discoveredYearning}】。\n\n現在開始第一步：擁抱脆弱。如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？`;
+        welcome = `好的，確認了您的核心渴望是：【${discoveredYearning}】。\n\n現在開始第一步：擁抱脆弱。如果這個受傷的感覺，是一個站在你面前、很需要安全感的小孩，而你現在是一個充滿力量與愛的大人。你會輕輕抱著他，對他說一句什麼樣『充滿保證與安慰』的話？`;
     }
 
     chatContainer.appendChild(createMessage(welcome, false));
@@ -395,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPhase1Done = localStorage.getItem('satir_phase1_completed');
 
     if (isPhase1Done === 'true' && discoveredYearning) {
-        startJourney(discoveredYearning);
+        startJourney(discoveredYearning, true);
     } else {
         directEntryArea.classList.remove('hidden');
         const welcome = `你好！我是你的專屬內在煉金教練。我知道在人際或親密關係中感到迷惘和受傷，是非常耗費心力的事。但請放心，今天我們不講大道理，也不去改變別人。我們要把焦點放回你身上，幫你把那些不舒服的感覺，提煉成保護你、支持你的力量。\n\n準備好的話，請在下方簡單告訴我：你剛剛在自己內心深處，發現了什麼樣『真實的脆弱或渴望』（例如：其實我很怕被拋棄、我真的很需要被肯定）？我們就從這裡開始。`;
@@ -407,7 +406,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("若您還不清楚自己的核心渴望，建議您先點擊「返回重新探索」，讓 AI 教練協助您釐清盲點！");
                 return;
             }
-            if (val) startJourney(val);
+            if (val) {
+                if (!originalEvent || originalEvent === "未提供具體事件") {
+                    originalEvent = "未提供具體事件（使用者直接進入第二階段）";
+                }
+                startJourney(val, false);
+            }
         };
     }
 });
