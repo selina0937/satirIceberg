@@ -66,19 +66,21 @@
             .iceberg-container { background: transparent !important; box-shadow: none !important; padding: 0 !important; display: block !important; position: static !important; }
             img#iceberg-bg-img { display: none !important; } 
 
-            /* 專屬列印的浮水印背景，強制每一頁重複 */
+            /* 專屬列印的浮水印背景，強制每一頁重複且不產生多餘空白頁 */
             #pdf-fixed-bg { 
                 display: block !important; 
                 position: fixed !important; 
-                top: 0; left: 0; right: 0; bottom: 0;
-                width: 100% !important; height: 100% !important; 
+                top: 0 !important; left: 0 !important; 
+                right: 0 !important; bottom: 0 !important;
                 z-index: -999 !important; 
                 opacity: 0.3 !important; 
                 pointer-events: none !important;
             }
             #pdf-fixed-bg img {
-                width: 100% !important; height: 100% !important; 
-                object-fit: cover !important; object-position: top !important;
+                width: 100% !important; 
+                height: 100% !important; 
+                object-fit: cover !important; 
+                object-position: top center !important;
             }
             
             .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
@@ -162,8 +164,8 @@
 
         <div id="iceberg-visual" class="w-full flex-1 flex flex-col items-center relative">
             <div class="iceberg-container w-full max-w-2xl mx-auto relative pt-6 pb-6">
-                <!-- 網頁模式下的真實 PNG 冰山底圖 -->
-                <img id="iceberg-bg-img" src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Iceberg Background" class="absolute inset-0 w-full h-auto object-cover object-top z-[0] opacity-80 pointer-events-none rounded-2xl" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <!-- 網頁模式下的真實 PNG 冰山底圖：修正 h-auto 為 h-full 確保永遠 100% 覆蓋容器 -->
+                <img id="iceberg-bg-img" src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Iceberg Background" class="absolute inset-0 w-full h-full object-cover object-top z-[0] opacity-80 pointer-events-none rounded-2xl" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
 
                 <!-- 虛線水面線：對齊圖片的水面 480px -->
                 <div id="waterline" class="absolute top-[480px] left-0 w-full border-b-2 border-dashed border-white/80 flex justify-center z-10 no-print">
@@ -249,7 +251,7 @@
 </div>
 
 <script>
-const DEFAULT_PROXY_URL = ""; 
+const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
 const STAGES = [
     { id: 0, nextQ: "你對這件事或對方說的話，在心裡『賦予了什麼意義』？背後有什麼規條或假設？" },
