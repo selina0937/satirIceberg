@@ -24,8 +24,10 @@
             <nav class="hidden md:flex gap-8 text-sm font-bold text-stone-500">
                 <a href="#tools-section" class="hover:text-sky-600 transition-colors">探索工具</a>
                 <a href="#about-section" class="hover:text-sky-600 transition-colors">關於本站</a>
+                <a href="#contact-section" class="hover:text-sky-600 transition-colors">聯繫我們</a>
             </nav>
             
+            <!-- Firebase 會員登入區塊 -->
             <div id="auth-container" class="flex items-center gap-3">
                 <div id="user-info" class="flex items-center gap-2"></div>
                 <button id="auth-btn" class="bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm transition-all">
@@ -83,15 +85,53 @@
         </div>
     </section>
 
+    <!-- 關於本站區塊 -->
+    <section id="about-section" class="py-20 px-6 bg-white border-t border-stone-200">
+        <div class="max-w-4xl mx-auto text-center">
+            <h3 class="text-3xl font-black text-slate-900 mb-6">關於 InnerSpace</h3>
+            <p class="text-lg text-slate-600 leading-relaxed font-medium">
+                InnerSpace 是一個結合心理學與 AI 技術的自我探索平台。我們深信，每個人內心都具備自我療癒與轉化的力量。透過薩提爾模式、非暴力溝通與榮格心理學的系統化引導，我們致力於提供一個安全、私密且具備深度的數位空間，陪伴您走過情緒的低谷，找回內在的平靜與力量。
+            </p>
+        </div>
+    </section>
+
+    <!-- 聯繫我們區塊 -->
+    <section id="contact-section" class="py-20 px-6 bg-stone-50 border-t border-stone-200">
+        <div class="max-w-xl mx-auto">
+            <div class="text-center mb-10">
+                <h3 class="text-3xl font-black text-slate-900">聯繫我們</h3>
+                <p class="text-slate-500 mt-2 font-medium">有任何使用上的問題或建議？歡迎隨時與我們分享。</p>
+            </div>
+            <form id="contact-form" class="bg-white p-8 rounded-3xl shadow-sm border border-stone-200 space-y-5" onsubmit="event.preventDefault(); alert('感謝您的留言！我們會盡快回覆您。'); this.reset();">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">您的稱呼</label>
+                    <input type="text" required class="w-full p-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="例如：王小明">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">電子郵件</label>
+                    <input type="email" required class="w-full p-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">留言內容</label>
+                    <textarea required rows="4" class="w-full p-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-sky-600 bg-stone-50 resize-none" placeholder="請輸入您的訊息..."></textarea>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-md transition-all">送出留言</button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm font-medium">
+        <p>&copy; 2026 InnerSpace 潛意識與溝通轉化工具. All rights reserved.</p>
+    </footer>
+
+    <!-- Firebase Auth Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-      
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyCVUQRXSsmSqHriQNqRMRr7LjrRBSUhAhM",
-  authDomain: "satiriceberg-c1edd.firebaseapp.com",
+  authDomain: "satir-iceberg.vercel.app",
   projectId: "satiriceberg-c1edd",
   storageBucket: "satiriceberg-c1edd.firebasestorage.app",
   messagingSenderId: "1095208613783",
@@ -115,7 +155,7 @@ const firebaseConfig = {
                 userInfo.innerHTML = '';
                 authBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.36,22 12.2,22C17,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z"/></svg> Google 登入`;
                 authBtn.classList.replace('text-red-500', 'text-stone-600');
-                authBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error("登入失敗", e); } };
+                authBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error("登入失敗", e); alert("登入失敗，請確認已正確配置 Firebase。"); } };
             }
         });
     </script>
