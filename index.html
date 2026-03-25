@@ -3,177 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InnerSpace | AI 心靈自我成長工具站</title>
+    <title>InnerSpace - 潛意識與溝通轉化工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fafaf9; scroll-behavior: smooth; }
-        .hero-gradient { background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%); }
-        .tool-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tool-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #38bdf8; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; scroll-behavior: smooth; background-color: #fafaf9; }
+        .hero-gradient { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="text-slate-800">
 
-    <header class="bg-white/90 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
+    <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-stone-200 z-50 transition-all">
         <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-3xl">🌱</span>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight text-stone-800">InnerSpace</h1>
-                    <p class="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Satir Growth Tools</p>
-                </div>
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                <span class="text-2xl">🌌</span>
+                <h1 class="text-xl font-black tracking-tighter text-slate-900">Inner<span class="text-sky-600">Space</span></h1>
             </div>
             <nav class="hidden md:flex gap-8 text-sm font-bold text-stone-500">
                 <a href="#tools-section" class="hover:text-sky-600 transition-colors">探索工具</a>
-                <a href="#about-section" class="hover:text-sky-600 transition-colors">關於本站與聯繫</a>
+                <a href="#about-section" class="hover:text-sky-600 transition-colors">關於本站</a>
             </nav>
+            
+            <div id="auth-container" class="flex items-center gap-3">
+                <div id="user-info" class="flex items-center gap-2"></div>
+                <button id="auth-btn" class="bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm transition-all">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.36,22 12.2,22C17,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z"/></svg>
+                    Google 登入
+                </button>
+            </div>
         </div>
     </header>
 
-    <section class="hero-gradient py-24 px-6 border-b border-stone-200">
-        <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-stone-800 leading-tight">
-                看見冰山底層的自己。<br>
-                <span class="text-sky-600">您的專屬 AI 心理引導助手。</span>
-            </h2>
-            <p class="text-lg text-stone-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                結合現代心理學模型與先進 AI 技術，幫助您在情緒波動中找回平靜、在人際衝突中釐清盲點，轉化脆弱為前進的力量。
-            </p>
-            <a href="#tools-section" class="inline-block bg-slate-900 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-slate-800 transition-all hover:scale-105">
-                開始探索之旅 ↓
+    <section class="hero-gradient pt-32 pb-24 px-6 border-b border-stone-200 text-center">
+        <div class="max-w-3xl mx-auto space-y-6">
+            <span class="px-4 py-1.5 bg-sky-100 text-sky-700 text-xs font-bold rounded-full tracking-widest uppercase">心理學 AI SaaS 平台</span>
+            <h2 class="text-4xl md:text-5xl font-black text-slate-900 leading-tight">將內在的衝突與脆弱<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600">轉化為具體的行動力量</span></h2>
+            <p class="text-lg text-slate-600 font-medium max-w-2xl mx-auto">整合薩提爾冰山、非暴力溝通與榮格心理學。透過 AI 引導，幫助您在情緒風暴中找回平靜，並產出高品質的雙贏對話腳本。</p>
+            <div class="pt-4"><a href="#tools-section" class="bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all">開始探索工具</a></div>
+        </div>
+    </section>
+
+    <section id="tools-section" class="py-20 px-6 max-w-6xl mx-auto">
+        <div class="text-center mb-16"><h3 class="text-3xl font-black text-slate-900">核心轉化工具</h3><p class="text-slate-500 mt-2 font-medium">依照您的需求，選擇最適合的引導流程</p></div>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <a href="satir_iceberg_spa.html" class="block bg-white rounded-3xl p-8 border border-stone-200 card-hover relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><span class="text-8xl">🧊</span></div>
+                <span class="inline-block px-3 py-1 bg-sky-50 text-sky-600 text-[10px] font-bold uppercase tracking-widest rounded mb-4">Phase 1</span>
+                <h4 class="text-2xl font-bold text-slate-900 mb-2">薩提爾冰山探索</h4>
+                <p class="text-slate-500 mb-6 font-medium">深層心理動力解碼。一層層剝開行為與情緒的表象，看見您內心最真實的渴望。</p>
+                <span class="text-sky-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">進入探索 →</span>
+            </a>
+
+            <a href="actionSimulator.html" class="block bg-white rounded-3xl p-8 border border-stone-200 card-hover relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><span class="text-8xl">✨</span></div>
+                <span class="inline-block px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-widest rounded mb-4">Phase 2</span>
+                <h4 class="text-2xl font-bold text-slate-900 mb-2">內在煉金模擬器</h4>
+                <p class="text-slate-500 mb-6 font-medium">將冰山探索發現的脆弱，透過內在百寶箱與教練視角，轉化為保護自己的力量與腳本。</p>
+                <span class="text-amber-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">進入煉金 →</span>
+            </a>
+
+            <a href="nvc_assistant.html" class="block bg-white rounded-3xl p-8 border border-stone-200 card-hover relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><span class="text-8xl">🤝</span></div>
+                <span class="inline-block px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest rounded mb-4">溝通實戰</span>
+                <h4 class="text-2xl font-bold text-slate-900 mb-2">非暴力溝通助理</h4>
+                <p class="text-slate-500 mb-6 font-medium">檢測容納之窗，精準表達感受與界線，產出能建立自我保護且促進雙贏的高品質台詞。</p>
+                <span class="text-emerald-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">開始對話 →</span>
+            </a>
+
+            <a href="jung_dream_analysis.html" class="block bg-white rounded-3xl p-8 border border-stone-200 card-hover relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><span class="text-8xl">🌙</span></div>
+                <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-widest rounded mb-4">深度潛意識</span>
+                <h4 class="text-2xl font-bold text-slate-900 mb-2">榮格夢境解析</h4>
+                <p class="text-slate-500 mb-6 font-medium">探索夢境原型，整合陰影，聆聽靈魂深處的低語，並轉化為現實生活中的具體行動。</p>
+                <span class="text-indigo-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">解析夢境 →</span>
             </a>
         </div>
     </section>
 
-    <main id="tools-section" class="flex-1 max-w-6xl mx-auto px-6 py-20 w-full scroll-mt-20">
-        <div class="mb-12 flex flex-col items-center text-center">
-            <h3 class="text-3xl font-bold text-stone-800 mb-2">🛠️ 心靈成長工具庫</h3>
-            <p class="text-stone-500">循序漸進，從覺察到行動的完整轉化歷程。</p>
-        </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <!-- 工具 1: 冰山探索 -->
-            <a href="satir_iceberg_spa.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
-                <div class="h-40 bg-sky-50 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🧊</span>
-                </div>
-                <div class="p-8">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-xs font-bold bg-sky-100 text-sky-600 px-2 py-0.5 rounded uppercase tracking-wider">Phase 1</span>
-                        <h4 class="text-xl font-bold text-slate-800">薩提爾冰山探索工具</h4>
-                    </div>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                        直擊潛意識核心，透過 5 步驟找出情緒背後的觀點、期待與深層渴望。適合在感到受挫或情緒波動時使用。
-                    </p>
-                    <span class="text-sky-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                        進入第一階段 <span aria-hidden="true">→</span>
-                    </span>
-                </div>
-            </a>
+      
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCVUQRXSsmSqHriQNqRMRr7LjrRBSUhAhM",
+  authDomain: "satiriceberg-c1edd.firebaseapp.com",
+  projectId: "satiriceberg-c1edd",
+  storageBucket: "satiriceberg-c1edd.firebasestorage.app",
+  messagingSenderId: "1095208613783",
+  appId: "1:1095208613783:web:698bddaed121b2aeb7b6d2",
+  measurementId: "G-TYTJP45Q94"
+};
 
-            <!-- 工具 2: 3D 煉金術 -->
-            <a href="actionSimulator.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
-                <div class="h-40 bg-amber-50 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">✨</span>
-                </div>
-                <div class="p-8">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded uppercase tracking-wider">Phase 2</span>
-                        <h4 class="text-xl font-bold text-slate-800">3D 行動煉金模擬器</h4>
-                    </div>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                        延續冰山探索的覺察，結合 NLP 視角切換與自尊維護工具箱，將內在渴望轉化為具體的一致性行動腳本。
-                    </p>
-                    <span class="text-amber-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                        進入第二階段 <span aria-hidden="true">→</span>
-                    </span>
-                </div>
-            </a>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-            <!-- 工具 3: 關係修復指南 -->
-            <a href="nvc_assistant.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
-                <div class="h-40 bg-emerald-50 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🤝</span>
-                </div>
-                <div class="p-8">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded uppercase tracking-wider">Tool</span>
-                        <h4 class="text-xl font-bold text-slate-800">關係修復指南 (非暴力溝通)</h4>
-                    </div>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                        專為伴侶、親子與職場設計。輸入您想說的話，AI 將協助轉換為不帶指責的「觀察、感受、需要、請求」。
-                    </p>
-                    <span class="text-emerald-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                        開啟對白助理 <span aria-hidden="true">→</span>
-                    </span>
-                </div>
-            </a>
+        const authBtn = document.getElementById('auth-btn');
+        const userInfo = document.getElementById('user-info');
 
-            <!-- 工具 4: 夢境解析 -->
-            <a href="jung_dream_analysis.html" class="tool-card block bg-white rounded-3xl border border-stone-200 overflow-hidden group shadow-sm">
-                <div class="h-40 bg-indigo-50 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-7xl relative z-10 group-hover:scale-110 transition-transform">🌙</span>
-                </div>
-                <div class="p-8">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded uppercase tracking-wider">Tool</span>
-                        <h4 class="text-xl font-bold text-slate-800">榮格潛意識夢境解析</h4>
-                    </div>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                        透過榮格原型理論，協助您將昨晚的夢境視覺化，並解析潛意識想傳達給您的成長訊息與內在指引。
-                    </p>
-                    <span class="text-indigo-600 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                        開始解析夢境 <span aria-hidden="true">→</span>
-                    </span>
-                </div>
-            </a>
-        </div>
-    </main>
-
-    <section id="about-section" class="bg-stone-900 text-stone-100 py-20 scroll-mt-0">
-        <div class="max-w-4xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div>
-                    <h3 class="text-2xl font-bold mb-4 text-white">關於薩提爾軟體諮詢</h3>
-                    <p class="text-stone-400 mb-6 leading-relaxed text-sm">
-                        我們致力於將專業的心理學模型與 AI 技術結合，打造出陪伴人們度過情緒低潮的自我成長工具。若您在使用上有任何建議或商務合作，歡迎隨時與我們聯繫。
-                    </p>
-                    <div class="space-y-3 text-sm text-stone-300">
-                        <p class="flex items-center gap-3"><span>📞</span> 客服專線：(02) 2345-6789</p>
-                        <p class="flex items-center gap-3"><span>✉️</span> 電子郵件：support@satir-software.com</p>
-                        <p class="flex items-center gap-3"><span>🏢</span> 公司地址：台北市心靈成長區靜心大道 1 號</p>
-                    </div>
-                </div>
-                
-                <div class="bg-stone-800 p-6 rounded-2xl border border-stone-700">
-                    <h4 class="font-bold text-white mb-4">聯絡我們</h4>
-                    <form id="contact-form" class="space-y-4">
-                        <input type="text" required placeholder="您的姓名" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
-                        <input type="email" required placeholder="您的電子信箱" class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500">
-                        <textarea rows="3" required placeholder="想告訴我們的話..." class="w-full bg-stone-700 border-none text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 resize-none"></textarea>
-                        <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg transition-colors">送出訊息</button>
-                    </form>
-                    <div id="form-success" class="hidden mt-4 text-sm text-emerald-400 bg-emerald-900/30 p-3 rounded-lg text-center border border-emerald-800">
-                        ✅ 訊息已成功送出！客服人員將會盡快回覆至您的信箱。
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = this.querySelector('button');
-            btn.textContent = '發送中...'; btn.disabled = true;
-            setTimeout(() => {
-                this.reset();
-                btn.textContent = '送出訊息'; btn.disabled = false;
-                document.getElementById('form-success').classList.remove('hidden');
-                setTimeout(() => document.getElementById('form-success').classList.add('hidden'), 5000);
-            }, 1000);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userInfo.innerHTML = `<img src="${user.photoURL}" alt="Avatar" class="w-8 h-8 rounded-full border border-stone-200 shadow-sm"><span class="text-sm font-bold text-stone-700 hidden md:block">${user.displayName}</span>`;
+                authBtn.innerHTML = `登出`; authBtn.classList.replace('text-stone-600', 'text-red-500');
+                authBtn.onclick = () => signOut(auth);
+            } else {
+                userInfo.innerHTML = '';
+                authBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.36,22 12.2,22C17,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z"/></svg> Google 登入`;
+                authBtn.classList.replace('text-red-500', 'text-stone-600');
+                authBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error("登入失敗", e); } };
+            }
         });
     </script>
 </body>
 </html>
+
+
