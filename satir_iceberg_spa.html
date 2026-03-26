@@ -135,6 +135,7 @@
 
 <!-- ================= 核心邏輯 ================= -->
 <script>
+// 變更：將預設 URL 直接指向 Vercel 的相對路徑，免除手動設定的煩惱
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
 const STAGE_GOALS = [
@@ -182,8 +183,11 @@ function closeModal() { document.getElementById('custom-modal').classList.add('h
 
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-    if (!proxyUrl) return "⚠️ 請點擊標題 5 下配置 Proxy URL。";
-    if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
+    
+    // 如果使用者手動輸入了包含 http 的絕對網址，才做額外處理，否則直接使用 /api/chat
+    if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
+        proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
+    }
 
     const stageGoal = STAGE_GOALS[currentStep];
     const nextStepInstruction = STAGES[currentStep].isSummary
