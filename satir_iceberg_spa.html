@@ -54,7 +54,7 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v4)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v5)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -211,7 +211,7 @@ async function callGemini(userMessage) {
     const systemInstruction = `你是具備心理治療博士背景的資深薩提爾教練。你的語氣溫和堅定，分析必須一針見血、充滿同理心與高度專業深度。拒絕空泛的安慰，要產出能帶來「頓悟 (Aha moment)」的高品質洞察。
 
 【核心規則】
-1. 字數與完整度：每次回覆控制在 150~250 字左右，保持精煉。絕對不可話說一半中斷，務必以完整的句子作結。
+1. 完整對話不截斷：請依照專業心理諮商的節奏給予深度解析，字數不限，但『務必』確保語意完整、以句號作結，絕對不可話說一半中斷！
 2. 禁用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號，以免破壞系統排版。
 3. 一次一步：跟隨步驟前進，絕對不要自行跳換步驟。
 4. 專業摘要標記：當使用者過關時，必須在最後使用 [STEP_COMPLETE: 摘要] 格式提煉使用者的核心意義。例如：[STEP_COMPLETE: 覺得自己被忽視]、[STEP_COMPLETE: 渴望被尊重]。
@@ -291,10 +291,12 @@ async function handleSend() {
         return; 
     }
 
-    if (currentTokens <= 0) {
+    // 💡 商業化防線升級：【溫柔的賒帳機制】
+    // 只在「第一步起點」阻擋。一旦開始冰山探索 (currentStep > 0)，就允許透支點數，保證情緒流程不斷裂！
+    if (currentStep === 0 && currentTokens <= 0) {
         showModal(
-            "點數已耗盡", 
-            "您的靈魂體驗點數已用完，無法繼續呼叫 AI 教練。\n\n(金流系統建置中，您可以請管理員手動至資料庫為您加值！)", 
+            "體驗點數已耗盡", 
+            "您的靈魂體驗點數已用完。為了提供最完整的深度分析，請您儲值後再開啟新的冰山探索。\n\n(金流系統建置中，您可以請管理員手動至資料庫為您加值！)", 
             "💳"
         );
         return; 
@@ -313,7 +315,7 @@ async function handleSend() {
     
     if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     
-    // 💡 核心升級：精準擷取 AI 提煉的 [STEP_COMPLETE: 摘要]，讓冰山圖充滿專業感
+    // 核心升級：精準擷取 AI 提煉的 [STEP_COMPLETE: 摘要]，讓冰山圖充滿專業感
     const completeMatch = coachResponse.match(/\[?【?STEP_COMPLETE(?:[:：]\s*([^\]】]*))?】?\]?/i);
     const isComplete = completeMatch !== null; 
     const cleanResponse = coachResponse.replace(/\[?【?STEP_COMPLETE.*】?\]?/gi, "").trim();
