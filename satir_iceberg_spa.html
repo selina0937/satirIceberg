@@ -14,6 +14,11 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
 
+        /* 冰山圖內部滾動軸：保護排版不溢出水面線 */
+        .iceberg-box-scroll { max-height: 120px; overflow-y: auto; padding-right: 8px; }
+        .iceberg-box-scroll::-webkit-scrollbar { width: 4px; }
+        .iceberg-box-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
         .iceberg-container { position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; align-items: center; z-index: 1; box-shadow: inset 0 10px 30px rgba(0,0,0,0.1); min-height: 80vh; }
         .visual-layer { transition: all 0.5s ease-out; opacity: 0.1; transform: translateY(15px); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.8); margin: 0 auto 12px auto; overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 10; border-radius: 16px; }
         .visual-layer.active { opacity: 1; transform: translateY(0); }
@@ -40,6 +45,7 @@
             .ai-q-box { width: 30% !important; border-right: 2px solid #ddd !important; background: #f8fafc !important; }
             .user-a-box { width: 70% !important; background: #fff !important; }
             .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 12pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
+            .iceberg-box-scroll { max-height: none !important; overflow: visible !important; } /* 列印時解除捲動限制 */
             .layer-4 { background: #fff !important; border-color: #333 !important; } .layer-4 .ai-q-box { background: #f8fafc !important; border-bottom-color: #ddd !important; } .layer-4 .user-a-box { background: #fff !important; } .layer-4 p, .layer-4 div, .layer-4 h4, .layer-4 span, .layer-4 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
         }
         .print-title { display: none; } #pdf-fixed-bg { display: none; }
@@ -54,7 +60,7 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v5)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v6)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -177,7 +183,6 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-// 建立 HTML 逃脫函數，防止 AI 產生的 `<標籤>` 破壞排版導致文字消失截斷
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, tag => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -197,24 +202,24 @@ async function callGemini(userMessage) {
         return "❌ 系統阻擋：請至 Vercel 正式網址進行測試。";
     }
 
+    // 💡 Prompt 升級 1：推進優先與格式防呆
     const nextStepInstruction = STAGES[currentStep].isSummary
         ? `【最後一步特別指令】
-1. 嚴格檢查防呆：使用者是否真的具體提出了「主動滿足渴望的做法」或「深刻的反思」？
-2. 若使用者只回答「不知道」、「可能吧」、「所以？」、「我哭了」等缺乏反思的短語，代表尚未過關！請繼續溫和追問引導，『絕對不可』輸出過關標記！
-3. 若確認過關：請給予極具專業深度與力量的「教練賦能總結」，並『務必』在結尾加上：[STEP_COMPLETE: 使用者真實自我的力量摘要(10字內)]`
+1. 嚴格檢查防呆：使用者是否真的具體提出了「主動滿足渴望的做法」？若使用者只回答「不知道」、「所以？」等，代表未過關，請溫和追問。
+2. 若確認過關：請給予極具專業深度的「教練賦能總結」，並『務必』在結尾加上：[STEP_COMPLETE: 使用者真實自我的力量摘要(10字內)]`
         : `【下一步指令】
-1. 嚴格檢查防呆：使用者的回答是否切題？若敷衍、逃避、說不知道或反問，請溫和地給予 2 個方向引導，繼續追問，『絕對不可』輸出過關標記！
-2. 若確認過關：請先給予一段深刻的心理學解析，接著『務必』一字不漏拋出下一個問題：\n「${STAGES[currentStep].nextQ}」
-3. 拋出問題後，『務必』在最尾端加上：[STEP_COMPLETE: 使用者此階段的答案摘要(10字內)]。絕對不可自己發明下個問題！`;
+1. 推進優先：如果使用者的回答包含了對當前問題的實質看法（即使是用糾正或澄清的語氣，例如「我沒有這樣想...」），請直接視為過關，並針對他的新說法給予解析推進到下一步，『絕對不要』只停留在原地確認！
+2. 若確認過關：請先給予精煉的心理學解析，接著『務必』換行加上分隔線「---」，然後一字不漏拋出下一個問題：\n「${STAGES[currentStep].nextQ}」
+3. 拋出問題後，『務必』在最尾端加上：[STEP_COMPLETE: 使用者此階段的答案摘要(10字內)]。絕對不可發明其他問題！`;
 
-    // 商業化 Persona 升級：具備專業深度，並且禁止中斷
-    const systemInstruction = `你是具備心理治療博士背景的資深薩提爾教練。你的語氣溫和堅定，分析必須一針見血、充滿同理心與高度專業深度。拒絕空泛的安慰，要產出能帶來「頓悟 (Aha moment)」的高品質洞察。
+    // 💡 Prompt 升級 2：禁止腦補超譯
+    const systemInstruction = `你是具備心理治療博士背景的資深薩提爾教練。你的分析一針見血且充滿同理心。
 
 【核心規則】
-1. 完整對話不截斷：請依照專業心理諮商的節奏給予深度解析，字數不限，但『務必』確保語意完整、以句號作結，絕對不可話說一半中斷！
-2. 禁用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號，以免破壞系統排版。
-3. 一次一步：跟隨步驟前進，絕對不要自行跳換步驟。
-4. 專業摘要標記：當使用者過關時，必須在最後使用 [STEP_COMPLETE: 摘要] 格式提煉使用者的核心意義。例如：[STEP_COMPLETE: 覺得自己被忽視]、[STEP_COMPLETE: 渴望被尊重]。
+1. 精煉且不過度延伸：控制在 100~200 字內。不要過度猜測使用者沒說的話（例如：不要硬扯社會焦慮或童年創傷），精準同理當下的情緒即可。
+2. 完整對話不截斷：務必確保語意完整、以句號作結，絕對不可話說一半中斷！
+3. 禁用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號。
+4. 專業摘要標記：當過關時，必須在最後使用 [STEP_COMPLETE: 摘要] 格式提煉核心意義。
 
 ${STAGE_GOALS[currentStep]}
 ${nextStepInstruction}
@@ -222,7 +227,6 @@ ${nextStepInstruction}
 
     const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
     
-    // 指數退避重試設定 (Exponential Backoff): 1s, 2s, 4s, 8s, 16s
     const retryDelays = [1000, 2000, 4000, 8000, 16000];
     const maxRetries = retryDelays.length;
 
@@ -238,13 +242,11 @@ ${nextStepInstruction}
                 }
                 return data.text;
             } else {
-                // 如果遇到 503(高負載) 或 429(額度耗盡)，且還有重試次數，就等待後重新呼叫
                 if ((res.status === 503 || res.status === 429) && attempt < maxRetries) {
                     await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
-                    continue; // 進行下一次迴圈 (重試)
+                    continue; 
                 }
 
-                // 如果重試次數用盡，或是遇到非 503/429 的其他錯誤，則解析並顯示錯誤
                 const errorText = await res.text();
                 let errorMessage = `HTTP ${res.status}`;
                 try {
@@ -253,12 +255,11 @@ ${nextStepInstruction}
                 } catch (e) { errorMessage += ` - ${errorText.substring(0, 50)}...`; }
                 
                 if (res.status === 429) return "⚠️ 【系統提示：目前使用人數過多，請稍後再試！】\n\n系統已自動重試但仍忙碌中，請等候一分鐘後再送出。";
-                if (res.status === 503) return "⚠️ 【系統提示：AI 伺服器目前超載 (503)】\n\nGoogle AI 伺服器正經歷短暫的高流量，系統已在背景重試數次但未能成功。請稍等幾分鐘後再試一次！";
+                if (res.status === 503) return "⚠️ 【系統提示：AI 伺服器目前超載 (503)】\n\nGoogle AI 伺服器正經歷短暫的高流量，請稍等幾分鐘後再試一次！";
                 
                 return `❌ 伺服器異常 (${errorMessage})`;
             }
         } catch (err) { 
-            // 處理網路斷線或 Fetch 失敗的情況，一樣進行重試
             if (attempt < maxRetries) {
                 await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
                 continue;
@@ -272,7 +273,6 @@ function createMessage(text, isUser) {
     const w = document.createElement('div'); w.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const b = document.createElement('div'); b.className = `max-w-[90%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-sky-700 text-white rounded-tr-none' : 'bg-white border border-stone-200 text-slate-800 rounded-tl-none'}`;
     if (!isUser) b.innerHTML = `<div class="text-[9px] font-bold text-sky-600 mb-1 uppercase tracking-widest">心理教練</div>`;
-    // 加入 break-words 防止超長連續文字(如網址或符號)撐破對話框
     const c = document.createElement('div'); c.className = 'whitespace-pre-wrap break-words leading-relaxed text-[14px]'; c.textContent = text;
     b.appendChild(c); w.appendChild(b); return w;
 }
@@ -291,8 +291,6 @@ async function handleSend() {
         return; 
     }
 
-    // 💡 商業化防線升級：【溫柔的賒帳機制】
-    // 只在「第一步起點」阻擋。一旦開始冰山探索 (currentStep > 0)，就允許透支點數，保證情緒流程不斷裂！
     if (currentStep === 0 && currentTokens <= 0) {
         showModal(
             "體驗點數已耗盡", 
@@ -306,7 +304,6 @@ async function handleSend() {
     userInputArea.value = ''; userInputArea.disabled = true; sendBtn.disabled = true;
     if (currentStep === 0 && !localStorage.getItem('satir_event_context')) localStorage.setItem('satir_event_context', input);
 
-    // 可以在文字中提示使用者正在連線
     const typing = document.createElement('div'); typing.id = 'typing-indicator'; typing.className = 'flex justify-start chat-bubble-enter';
     typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中... (若遇高流量將自動為您重新連線)</div></div>`;
     chatContainer.appendChild(typing); chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -315,39 +312,55 @@ async function handleSend() {
     
     if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     
-    // 核心升級：精準擷取 AI 提煉的 [STEP_COMPLETE: 摘要]，讓冰山圖充滿專業感
     const completeMatch = coachResponse.match(/\[?【?STEP_COMPLETE(?:[:：]\s*([^\]】]*))?】?\]?/i);
     const isComplete = completeMatch !== null; 
     const cleanResponse = coachResponse.replace(/\[?【?STEP_COMPLETE.*】?\]?/gi, "").trim();
     
-    chatContainer.appendChild(createMessage(cleanResponse, false)); 
+    // 💡 UI 升級 1：切除對話框中多餘的分隔線
+    const displayResponse = cleanResponse.replace(/---+/g, "").trim();
+    chatContainer.appendChild(createMessage(displayResponse, false)); 
     
-    // 若 AI 回覆中包含錯誤標記 ❌ 或 ⚠️，則不將該對話推入歷史紀錄，並恢復輸入框
     if (coachResponse.includes("❌") || coachResponse.includes("⚠️")) { 
         userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus(); return; 
     }
     
-    chatHistory.push({ role: "coach", text: cleanResponse });
+    chatHistory.push({ role: "coach", text: displayResponse });
 
     if (isComplete) {
         const layerEl = document.getElementById(`layer-${currentStep}`); 
         const textEl = document.getElementById(`layer-text-${currentStep}`); 
         const analysisEl = document.getElementById(`layer-analysis-${currentStep}`);
         
-        // 如果 AI 有產出精煉摘要，就優先使用摘要；否則退回使用用戶的原話
         let icebergLabel = input;
         if (completeMatch && completeMatch[1] && completeMatch[1].trim() !== "") {
             icebergLabel = completeMatch[1].trim(); 
         }
 
+        // 💡 UI 升級 2：自動切除冰山圖內，屬於「下一個問題」的文字
+        let insightText = cleanResponse;
+        if (currentStep < STAGES.length - 1) {
+            // 利用 Prompt 要求的分隔線切開，只取前半段的純分析
+            if (insightText.includes('---')) {
+                insightText = insightText.split('---')[0];
+            } else {
+                // 防呆：如果 AI 忘記加分隔線，強制移除下個問題的字串
+                const nextQ = STAGES[currentStep].nextQ;
+                const shortNextQ = nextQ.split('。')[0]; 
+                const qIndex = insightText.indexOf(shortNextQ);
+                if(qIndex !== -1) insightText = insightText.substring(0, qIndex);
+            }
+            insightText = insightText.replace(/---+$/, "").trim();
+        }
+
         if(layerEl && textEl && analysisEl) {
             layerEl.classList.add('active'); 
-            textEl.textContent = icebergLabel; // 顯示專業摘要，不再是「可能1或3吧」
+            textEl.textContent = icebergLabel; 
             textEl.classList.remove('italic');
-            // 套用 escapeHTML 與 whitespace-pre-wrap break-words，保證冰山圖內的換行與文字絕不截斷
-            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">教練洞察分析：</span><br><span class="whitespace-pre-wrap break-words">${escapeHTML(cleanResponse)}</span>`; 
+            
+            // 💡 UI 升級 3：加入 iceberg-box-scroll，限制最大高度並允許內部捲動，保護水面線排版！
+            analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">教練洞察分析：</span><div class="iceberg-box-scroll mt-1 whitespace-pre-wrap break-words">${escapeHTML(insightText)}</div>`; 
             analysisEl.classList.remove('hidden');
-            if (currentStep === 3) analyzedYearning = icebergLabel; // 將提煉出來的完美渴望存起來，作為下一階段煉金的起點！
+            if (currentStep === 3) analyzedYearning = icebergLabel; 
         }
         currentStep++;
         if (currentStep < STAGES.length) {
