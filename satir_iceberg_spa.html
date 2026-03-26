@@ -14,71 +14,41 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
 
-        .iceberg-container {
-            position: relative; border-radius: 20px; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center; z-index: 1;
-            box-shadow: inset 0 10px 30px rgba(0,0,0,0.1); min-height: 80vh;
-        }
-        
-        .visual-layer {
-            transition: all 0.5s ease-out; opacity: 0.1; transform: translateY(15px);
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.8); margin: 0 auto 12px auto;
-            overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 10;
-            border-radius: 16px;
-        }
+        .iceberg-container { position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; align-items: center; z-index: 1; box-shadow: inset 0 10px 30px rgba(0,0,0,0.1); min-height: 80vh; }
+        .visual-layer { transition: all 0.5s ease-out; opacity: 0.1; transform: translateY(15px); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.8); margin: 0 auto 12px auto; overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 10; border-radius: 16px; }
         .visual-layer.active { opacity: 1; transform: translateY(0); }
-        
         .ai-q-box { background: rgba(240, 249, 255, 0.9); border-right: 1px solid rgba(0,0,0,0.05); padding: 16px; width: 35%; display: flex; flex-direction: column; justify-content: center; }
         .user-a-box { padding: 16px; width: 65%; display: flex; flex-direction: column; justify-content: center; }
-        
         .layer-0 { width: 85%; max-width: 28rem; border-radius: 24px 24px 8px 8px; }
         .layer-1 { width: 90%; max-width: 30rem; border-radius: 8px; }
         .layer-2 { width: 95%; max-width: 32rem; border-radius: 8px; }
         .layer-3 { width: 98%; max-width: 34rem; border-radius: 8px; }
         .layer-4 { width: 100%; max-width: 36rem; background: rgba(15, 23, 42, 0.95) !important; border-radius: 8px 8px 24px 24px; border: 1px solid #1e293b; margin-bottom: 30px; }
 
-        /* PDF 完美列印：透明背景與跨頁背景鎖定 */
         @media print {
-            .no-print { display: none !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print { display: none !important; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             html, body { display: block !important; height: auto !important; max-height: none !important; overflow: visible !important; position: static !important; background: transparent !important; }
             main, section, div, p { height: auto !important; max-height: none !important; overflow: visible !important; page-break-inside: auto !important; }
-            
-            main { display: block !important; }
-            #chat-section { display: none !important; } 
+            main { display: block !important; } #chat-section { display: none !important; } 
             #visual-section { width: 100% !important; max-width: 100% !important; display: block !important; padding: 0 !important; background: transparent !important; position: static !important; }
-            
             .iceberg-container { background: transparent !important; box-shadow: none !important; padding: 0 !important; display: block !important; position: static !important; }
             img#iceberg-bg-img { display: none !important; } 
-
-            #pdf-fixed-bg { 
-                display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; 
-                right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important;
-                z-index: -1 !important; opacity: 0.3 !important; pointer-events: none !important;
-            }
+            #pdf-fixed-bg { display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; z-index: -1 !important; opacity: 0.3 !important; pointer-events: none !important; }
             #pdf-fixed-bg img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: top center !important; }
-            
             .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
             .visual-layer { opacity: 1 !important; transform: none !important; page-break-inside: avoid !important; margin-bottom: 25px !important; border: 2px solid #333 !important; width: 100% !important; max-width: 100% !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; background: rgba(255,255,255,0.95) !important; position: relative !important; z-index: 10 !important; }
             .ai-q-box { width: 30% !important; border-right: 2px solid #ddd !important; background: #f8fafc !important; }
             .user-a-box { width: 70% !important; background: #fff !important; }
             .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 12pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
-            
-            .layer-4 { background: #fff !important; border-color: #333 !important; }
-            .layer-4 .ai-q-box { background: #f8fafc !important; border-bottom-color: #ddd !important; }
-            .layer-4 .user-a-box { background: #fff !important; }
-            .layer-4 p, .layer-4 div, .layer-4 h4, .layer-4 span, .layer-4 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
+            .layer-4 { background: #fff !important; border-color: #333 !important; } .layer-4 .ai-q-box { background: #f8fafc !important; border-bottom-color: #ddd !important; } .layer-4 .user-a-box { background: #fff !important; } .layer-4 p, .layer-4 div, .layer-4 h4, .layer-4 span, .layer-4 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
         }
-        .print-title { display: none; }
-        #pdf-fixed-bg { display: none; }
-        .modal-overlay { background: rgba(0,0,0,0.8); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .print-title { display: none; } #pdf-fixed-bg { display: none; }
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-900">
 
 <div id="pdf-fixed-bg"><img src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Print Background"></div>
-<div id="token-secret-btn" class="fixed bottom-0 right-0 w-16 h-16 z-50 cursor-default no-print" title="雙擊查看 Token 消耗" ondblclick="showTokenUsage()"></div>
 
 <header class="bg-white border-b border-stone-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
     <div class="flex items-center gap-4">
@@ -88,6 +58,14 @@
         </div>
     </div>
     <div class="flex items-center gap-3">
+        
+        <!-- 錢包與登入區塊 -->
+        <div id="wallet-badge" class="hidden items-center gap-1.5 bg-sky-50 border border-sky-100 px-3 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] text-sky-700 font-bold tracking-wider">餘額</span>
+            <span id="token-balance" class="text-sm font-black text-sky-600">--</span>
+            <span class="text-[10px] text-sky-500">T</span>
+        </div>
+
         <div id="user-info" class="flex items-center gap-2 hidden md:flex"></div>
         <button id="auth-btn" class="bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">登入</button>
         <div class="w-px h-4 bg-stone-300 mx-1"></div>
@@ -102,7 +80,8 @@
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-4 bg-[#fcfcfc]"></div>
         <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
             <div id="input-area" class="flex flex-col gap-3">
-                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50" placeholder="請輸入您的回答 (不知道可直說)..."></textarea>
+                <!-- 故意不一開始就 disabled，利用沉沒成本讓使用者打字，按下送出才擋 -->
+                <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50 transition-all" placeholder="請輸入您的回答 (不知道可直說)..."></textarea>
                 <div class="flex justify-between items-center"><span id="step-indicator" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Phase 1/5</span><button id="btn-send" class="bg-sky-700 hover:bg-sky-800 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出 ➤</button></div>
             </div>
             <div id="stage-transition-btn" class="hidden text-center mt-3 pt-3 border-t border-stone-100">
@@ -134,6 +113,18 @@
     </section>
 </main>
 
+<!-- 共用 Modal (警告/登入提示/儲值提示) -->
+<div id="custom-modal" class="hidden modal-overlay no-print">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform transition-transform border-t-8 border-sky-600 mx-4">
+        <h3 class="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2"><span id="modal-icon">💡</span><span id="modal-title">提示</span></h3>
+        <p class="text-sm text-slate-600 mb-6 whitespace-pre-wrap leading-relaxed" id="modal-desc"></p>
+        <div class="flex justify-end gap-2" id="modal-buttons">
+            <button onclick="closeModal()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-4 py-2 rounded-full font-bold">關閉</button>
+            <button id="modal-action-btn" class="hidden bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-full font-bold shadow-md transition-all">執行動作</button>
+        </div>
+    </div>
+</div>
+
 <div id="modal-settings" class="hidden modal-overlay no-print">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-slate-900">
         <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
@@ -142,6 +133,7 @@
     </div>
 </div>
 
+<!-- ================= 核心邏輯 ================= -->
 <script>
 const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
 
@@ -161,10 +153,32 @@ const STAGES = [
     { id: 4, isSummary: true }
 ];
 
-let currentStep = 0; let chatHistory = []; let analyzedYearning = ""; let sessionTokenCount = 0; 
+let currentStep = 0; let chatHistory = []; let analyzedYearning = "";
 let chatContainer, userInputArea, sendBtn, inputWrapper, pdfBtn, transitionBtn, stepIndicator;
 
-function showTokenUsage() { alert(`📊 本回合累計使用 Token 數: ${sessionTokenCount}`); }
+// 供外部 Firebase 呼叫的 Token 更新與取得函數
+let currentUserUid = null;
+let currentTokens = 0;
+let updateFirestoreTokens = null; // 稍後在 Firebase 區塊內綁定
+let triggerGoogleLogin = null;    // 稍後在 Firebase 區塊內綁定
+
+function showModal(title, desc, icon = '💡', actionText = null, actionFn = null) {
+    document.getElementById('modal-icon').innerText = icon;
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-desc').innerText = desc;
+    const actionBtn = document.getElementById('modal-action-btn');
+    if(actionText && actionFn) {
+        actionBtn.innerText = actionText;
+        actionBtn.onclick = () => { actionFn(); closeModal(); };
+        actionBtn.classList.remove('hidden');
+    } else {
+        actionBtn.classList.add('hidden');
+    }
+    const modal = document.getElementById('custom-modal');
+    modal.classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
@@ -189,7 +203,13 @@ ${nextStepInstruction}
     try {
         const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction }) });
         if (res.ok) {
-            const data = await res.json(); if(data.tokenUsage) sessionTokenCount += data.tokenUsage.totalTokenCount; return data.text;
+            const data = await res.json(); 
+            // API 呼叫成功，扣除雲端 Token！
+            if(data.tokenUsage && currentUserUid && updateFirestoreTokens) {
+                const used = data.tokenUsage.totalTokenCount;
+                await updateFirestoreTokens(used);
+            }
+            return data.text;
         } else {
             if (res.status === 429) return "⚠️ 【系統提示：API 額度耗盡 (HTTP 429)】\n\n模擬過關。\n\n教練分析：您的覺察很深刻！ [STEP_COMPLETE]";
             return `❌ 伺服器異常 (HTTP ${res.status})`;
@@ -207,15 +227,39 @@ function createMessage(text, isUser) {
 
 async function handleSend() {
     const input = userInputArea.value.trim(); if (!input) return;
+
+    // 商業化防線 1：檢查登入 (沉沒成本發威點)
+    if (!currentUserUid) {
+        showModal(
+            "需要登入以解鎖分析", 
+            "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 5,000 點免費新手體驗點數！", 
+            "🔒", 
+            "一鍵登入", 
+            () => { if(triggerGoogleLogin) triggerGoogleLogin(); }
+        );
+        return; // 阻擋送出
+    }
+
+    // 商業化防線 2：檢查餘額
+    if (currentTokens <= 0) {
+        showModal(
+            "點數已耗盡", 
+            "您的靈魂體驗點數已用完，無法繼續呼叫 AI 教練。\n\n(金流系統建置中，您可以請管理員手動至資料庫為您加值！)", 
+            "💳"
+        );
+        return; // 阻擋送出
+    }
+
     chatContainer.appendChild(createMessage(input, true)); chatHistory.push({ role: "user", text: input });
     userInputArea.value = ''; userInputArea.disabled = true; sendBtn.disabled = true;
     if (currentStep === 0 && !localStorage.getItem('satir_event_context')) localStorage.setItem('satir_event_context', input);
 
     const typing = document.createElement('div'); typing.id = 'typing-indicator'; typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中...</div></div>`;
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中... (將扣除點數)</div></div>`;
     chatContainer.appendChild(typing); chatContainer.scrollTop = chatContainer.scrollHeight;
 
     const coachResponse = await callGemini(input);
+    
     if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     const isComplete = coachResponse.includes("[STEP_COMPLETE]"); const cleanResponse = coachResponse.replace("[STEP_COMPLETE]", "").trim();
     chatContainer.appendChild(createMessage(cleanResponse, false)); chatHistory.push({ role: "coach", text: cleanResponse });
@@ -246,10 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('satir_event_context'); localStorage.removeItem('satir_discovered_yearning');
     document.getElementById('btn-start-alchemy').onclick = () => { window.location.href = 'actionSimulator.html'; };
 
-    let logoClickCount = 0; const modal = document.getElementById('modal-settings'); const proxyIn = document.getElementById('proxy-url-input');
-    document.getElementById('header-logo').onclick = () => { logoClickCount++; if(logoClickCount >= 5) { modal.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; } };
-    document.getElementById('btn-modal-close').onclick = () => modal.classList.add('hidden');
-    document.getElementById('btn-modal-save').onclick = () => { localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim()); modal.classList.add('hidden'); location.reload(); };
+    let logoClickCount = 0; const modalConfig = document.getElementById('modal-settings'); const proxyIn = document.getElementById('proxy-url-input');
+    document.getElementById('header-logo').onclick = () => { logoClickCount++; if(logoClickCount >= 5) { modalConfig.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; } };
+    document.getElementById('btn-modal-close').onclick = () => modalConfig.classList.add('hidden');
+    document.getElementById('btn-modal-save').onclick = () => { localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim()); modalConfig.classList.add('hidden'); location.reload(); };
 
     pdfBtn.onclick = () => window.print(); sendBtn.onclick = handleSend;
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
@@ -258,12 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<!-- ================= Firebase Auth & Firestore 整合 ================= -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-   
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+    // TODO: 請替換為您的 Firebase Config
+    const firebaseConfig = {
   apiKey: "AIzaSyCVUQRXSsmSqHriQNqRMRr7LjrRBSUhAhM",
   authDomain: "satir-iceberg.vercel.app",
   projectId: "satiriceberg-c1edd",
@@ -272,19 +318,82 @@ const firebaseConfig = {
   appId: "1:1095208613783:web:698bddaed121b2aeb7b6d2",
   measurementId: "G-TYTJP45Q94"
 };
-    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const provider = new GoogleAuthProvider();
-    const authBtn = document.getElementById('auth-btn'); const userInfo = document.getElementById('user-info');
-    onAuthStateChanged(auth, (user) => {
+    
+    const app = initializeApp(firebaseConfig); 
+    const auth = getAuth(app); 
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+    
+    const authBtn = document.getElementById('auth-btn'); 
+    const userInfo = document.getElementById('user-info');
+    const walletBadge = document.getElementById('wallet-badge');
+    const tokenBalanceDisplay = document.getElementById('token-balance');
+    let unsubscribeSnapshot = null;
+
+    // 將登入功能暴露給全域，讓「送出防呆」可以呼叫
+    triggerGoogleLogin = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); } };
+
+    // 實作扣點函數，綁定給全域使用
+    updateFirestoreTokens = async (usedTokens) => {
+        if(!currentUserUid) return;
+        const userRef = doc(db, "users", currentUserUid);
+        await updateDoc(userRef, { tokens: increment(-usedTokens) });
+    };
+
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
+            currentUserUid = user.uid;
+            
+            // 1. UI 變更為登入狀態
             userInfo.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full"><span class="text-xs font-bold text-stone-600">${user.displayName}</span>`;
-            authBtn.innerHTML = `登出`; authBtn.classList.replace('text-stone-600', 'text-red-500'); authBtn.onclick = () => signOut(auth);
+            authBtn.innerHTML = `登出`; authBtn.classList.replace('text-stone-600', 'text-red-500'); 
+            authBtn.onclick = () => signOut(auth);
+            walletBadge.classList.remove('hidden');
+            walletBadge.classList.add('flex');
+
+            // 2. Firestore 讀取/創建會員資料 (贈送新手 5000 點)
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    name: user.displayName,
+                    email: user.email,
+                    tokens: 5000,
+                    createdAt: new Date()
+                });
+            }
+
+            // 3. 設定即時監聽 (如果管理員從後台改數字，網頁會瞬間變更！)
+            unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentTokens = docSnap.data().tokens;
+                    // 加入逗號格式化 (如 5,000)
+                    tokenBalanceDisplay.innerText = currentTokens.toLocaleString();
+                    
+                    // 根據餘額改變顏色提示
+                    if(currentTokens < 500) {
+                        tokenBalanceDisplay.classList.replace('text-sky-600', 'text-red-500');
+                    } else {
+                        tokenBalanceDisplay.classList.replace('text-red-500', 'text-sky-600');
+                    }
+                }
+            });
+
         } else {
-            userInfo.innerHTML = ''; authBtn.innerHTML = `登入`; authBtn.classList.replace('text-red-500', 'text-stone-600');
-            authBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) {} };
+            // 未登入狀態
+            currentUserUid = null;
+            currentTokens = 0;
+            if(unsubscribeSnapshot) unsubscribeSnapshot(); // 取消資料庫監聽
+            
+            userInfo.innerHTML = ''; 
+            walletBadge.classList.add('hidden');
+            walletBadge.classList.remove('flex');
+            
+            authBtn.innerHTML = `登入`; authBtn.classList.replace('text-red-500', 'text-stone-600');
+            authBtn.onclick = triggerGoogleLogin;
         }
     });
 </script>
 </body>
 </html>
-
-
