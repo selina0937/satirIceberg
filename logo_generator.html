@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnerSpace - 專屬 Logo 產生器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-slate-800 p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Inner<span class="text-sky-600">Space</span> 品牌 Logo 產生器</h1>
+            <p class="text-slate-500 mt-3 font-medium">為您的 Google OAuth 同意畫面挑選最適合的標誌。<br>點擊下方按鈕即可直接下載完美比例 (512x512) 的 PNG 圖檔。</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            
+            <!-- Option 1: 宇宙星芒 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200 flex flex-col items-center text-center hover:shadow-xl transition-shadow">
+                <div class="w-48 h-48 mb-6 relative rounded-3xl overflow-hidden border border-stone-100 shadow-inner">
+                    <svg id="logo-cosmos" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="grad-cosmos" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0284c7" /> <!-- sky-600 -->
+                                <stop offset="100%" stop-color="#4f46e5" /> <!-- indigo-600 -->
+                            </linearGradient>
+                        </defs>
+                        <!-- 圓潤的背景底框 -->
+                        <rect width="512" height="512" rx="128" fill="url(#grad-cosmos)" />
+                        <!-- 內在的星芒/靈魂之光 -->
+                        <path d="M256 100 C256 220, 156 256, 100 256 C200 256, 256 356, 256 412 C256 312, 356 256, 412 256 C312 256, 256 156, 256 100 Z" fill="#ffffff" />
+                        <!-- 中心的溫暖微光 -->
+                        <circle cx="256" cy="256" r="24" fill="#fde68a" opacity="0.9" /> <!-- amber-200 -->
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">宇宙星芒 (Inner Cosmos)</h3>
+                <p class="text-sm text-slate-500 mb-6 flex-1">象徵潛意識空間的浩瀚、內在煉金的轉化魔力。漸層藍靛色完美呼應網站首頁的主色調。</p>
+                <button onclick="downloadPNG('logo-cosmos', 'InnerSpace_Logo_Cosmos.png')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors">下載此 Logo (PNG)</button>
+            </div>
+
+            <!-- Option 2: 冰山倒影 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200 flex flex-col items-center text-center hover:shadow-xl transition-shadow">
+                <div class="w-48 h-48 mb-6 relative rounded-full overflow-hidden border border-stone-100 shadow-inner">
+                    <svg id="logo-iceberg" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="grad-ice-top" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#e0f2fe" /> <!-- sky-100 -->
+                                <stop offset="100%" stop-color="#bae6fd" /> <!-- sky-200 -->
+                            </linearGradient>
+                            <linearGradient id="grad-ice-bottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#0284c7" /> <!-- sky-600 -->
+                                <stop offset="100%" stop-color="#0f172a" /> <!-- slate-900 -->
+                            </linearGradient>
+                        </defs>
+                        <!-- 深邃的海洋背景 -->
+                        <rect width="512" height="512" fill="#0f172a" /> <!-- slate-900 -->
+                        <!-- 水面上的冰山 -->
+                        <polygon points="256,120 150,256 362,256" fill="url(#grad-ice-top)" />
+                        <!-- 水面下的冰山 (潛意識) -->
+                        <polygon points="150,256 362,256 256,430" fill="url(#grad-ice-bottom)" />
+                        <!-- 虛線水面 (意識界線) -->
+                        <line x1="80" y1="256" x2="432" y2="256" stroke="#ffffff" stroke-width="8" stroke-dasharray="20,15" opacity="0.6" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">冰山探索 (Iceberg Depth)</h3>
+                <p class="text-sm text-slate-500 mb-6 flex-1">極簡幾何風的薩提爾冰山。水面上與水面下的倒影，強調探索深層心理動力的專業感。</p>
+                <button onclick="downloadPNG('logo-iceberg', 'InnerSpace_Logo_Iceberg.png')" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl transition-colors">下載此 Logo (PNG)</button>
+            </div>
+
+            <!-- Option 3: 溫柔交織 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200 flex flex-col items-center text-center hover:shadow-xl transition-shadow">
+                <div class="w-48 h-48 mb-6 relative rounded-[2rem] overflow-hidden border border-stone-100 shadow-inner">
+                    <svg id="logo-nvc" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="grad-nvc1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#10b981" /> <!-- emerald-500 -->
+                                <stop offset="100%" stop-color="#047857" /> <!-- emerald-700 -->
+                            </linearGradient>
+                            <linearGradient id="grad-nvc2" x1="100%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" stop-color="#fbbf24" /> <!-- amber-400 -->
+                                <stop offset="100%" stop-color="#d97706" /> <!-- amber-600 -->
+                            </linearGradient>
+                        </defs>
+                        <!-- 清新柔和的底色 -->
+                        <rect width="512" height="512" fill="#ecfdf5" /> <!-- emerald-50 -->
+                        <!-- 兩個交織的水滴/愛心，象徵同理心與連結 -->
+                        <path d="M256,150 C130,150 150,300 256,362 C256,362 256,362 256,362 Z" fill="url(#grad-nvc1)" opacity="0.85" />
+                        <path d="M256,150 C382,150 362,300 256,362 C256,362 256,362 256,362 Z" fill="url(#grad-nvc2)" opacity="0.85" />
+                        <!-- 中心的交集光芒 -->
+                        <path d="M256,200 C220,250 256,310 256,310 C256,310 292,250 256,200 Z" fill="#ffffff" opacity="0.9" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">溫柔交織 (Empathetic Flow)</h3>
+                <p class="text-sm text-slate-500 mb-6 flex-1">象徵非暴力溝通中「雙方需求的交集」。綠色與琥珀色代表生命的活力與安全感。</p>
+                <button onclick="downloadPNG('logo-nvc', 'InnerSpace_Logo_NVC.png')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">下載此 Logo (PNG)</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 隱藏的 Canvas 用於 SVG 轉 PNG 轉換 -->
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        function downloadPNG(svgId, filename) {
+            const svgElement = document.getElementById(svgId);
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 設定匯出尺寸為 512x512
+            const width = 512;
+            const height = 512;
+            canvas.width = width;
+            canvas.height = height;
+
+            // 將 SVG 序列化成 XML 字串
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgElement);
+            
+            // 確保包含 xmlns 屬性
+            if(!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+                svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+
+            // 建立 Blob 與 URL
+            const svgBlob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+            const url = URL.createObjectURL(svgBlob);
+            
+            const img = new Image();
+            img.onload = function() {
+                // 繪製到 Canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                
+                // 轉換為 PNG 並下載
+                const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+                const a = document.createElement("a");
+                a.download = filename;
+                a.href = imgURI;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            img.src = url;
+        }
+    </script>
+</body>
+</html>
