@@ -54,7 +54,7 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v3)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v4)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -135,11 +135,11 @@
 <!-- ================= 核心邏輯 ================= -->
 <script>
 const STAGE_GOALS = [
-    "▶ 目前階段：【行為與感受】。使用者描述事件與情緒。請同理並剖析。",
-    "▶ 目前階段：【觀點與意義】。使用者回答對事件看法。請點出盲點。",
-    "▶ 目前階段：【期待】。使用者回答原本希望的發展。請分析期待是否落空。",
-    "▶ 目前階段：【渴望】。使用者回答底層渴望。請深刻接納並肯定。",
-    "▶ 目前階段：【真實自我】。使用者回答如何自我滿足。請給予賦能總結。"
+    "▶ 目前階段：【行為與感受】。使用者描述事件與情緒。請同理其情緒，並剖析底層的情感。",
+    "▶ 目前階段：【觀點與意義】。使用者回答對事件的看法。請點出盲點與背後僵化的「規條」。",
+    "▶ 目前階段：【期待】。使用者回答原本希望的發展。請分析這份期待為何落空，以及其不合理之處。",
+    "▶ 目前階段：【渴望】。使用者回答底層渴望。請深刻接納並肯定這份普世的人性需求。",
+    "▶ 目前階段：【真實自我】。使用者回答如何自我滿足渴望。請給予賦能，看見其內在生命力。"
 ];
 
 const STAGES = [
@@ -177,7 +177,7 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-// 修正 1：建立 HTML 逃脫函數，防止 AI 產生的 `<標籤>` 破壞排版導致文字消失截斷
+// 建立 HTML 逃脫函數，防止 AI 產生的 `<標籤>` 破壞排版導致文字消失截斷
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, tag => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -197,18 +197,26 @@ async function callGemini(userMessage) {
         return "❌ 系統阻擋：請至 Vercel 正式網址進行測試。";
     }
 
-    const stageGoal = STAGE_GOALS[currentStep];
     const nextStepInstruction = STAGES[currentStep].isSummary
-        ? "【下一步指令】這是最後一步。不要再提問。請給予一段精闢洞察總結，並『務必』在最尾端加上 [STEP_COMPLETE] 標記。"
-        : "【下一步指令】若回答過關，請先給予簡短分析，然後『務必』一字不漏地拋出以下問題繼續引導：\n" + STAGES[currentStep].nextQ + "\n\n最尾端加上 [STEP_COMPLETE]。絕對不可自己發明問題！";
+        ? `【最後一步特別指令】
+1. 嚴格檢查防呆：使用者是否真的具體提出了「主動滿足渴望的做法」或「深刻的反思」？
+2. 若使用者只回答「不知道」、「可能吧」、「所以？」、「我哭了」等缺乏反思的短語，代表尚未過關！請繼續溫和追問引導，『絕對不可』輸出過關標記！
+3. 若確認過關：請給予極具專業深度與力量的「教練賦能總結」，並『務必』在結尾加上：[STEP_COMPLETE: 使用者真實自我的力量摘要(10字內)]`
+        : `【下一步指令】
+1. 嚴格檢查防呆：使用者的回答是否切題？若敷衍、逃避、說不知道或反問，請溫和地給予 2 個方向引導，繼續追問，『絕對不可』輸出過關標記！
+2. 若確認過關：請先給予一段深刻的心理學解析，接著『務必』一字不漏拋出下一個問題：\n「${STAGES[currentStep].nextQ}」
+3. 拋出問題後，『務必』在最尾端加上：[STEP_COMPLETE: 使用者此階段的答案摘要(10字內)]。絕對不可自己發明下個問題！`;
 
-    const systemInstruction = `你是精通薩提爾模型的心理教練。
-1. 嚴格字數限制：每次回覆總字數絕對不可超過 150 字！保持極度精煉，避免文字過長被系統截斷而遺失標記。
-2. 禁止使用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號，這會導致畫面顯示異常或文字截斷。
-3. 一次一步：絕對不要自行跳換步驟。
-4. 拯救不知道：若使用者回答不知道，主動提供 2~3 個可能的心理動力選項。此時『絕對不要』輸出 [STEP_COMPLETE]。
-5. 過關與推進：只要具體回答即過關，確實執行下方【下一步指令】。
-${stageGoal}
+    // 商業化 Persona 升級：具備專業深度，並且禁止中斷
+    const systemInstruction = `你是具備心理治療博士背景的資深薩提爾教練。你的語氣溫和堅定，分析必須一針見血、充滿同理心與高度專業深度。拒絕空泛的安慰，要產出能帶來「頓悟 (Aha moment)」的高品質洞察。
+
+【核心規則】
+1. 字數與完整度：每次回覆控制在 150~250 字左右，保持精煉。絕對不可話說一半中斷，務必以完整的句子作結。
+2. 禁用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號，以免破壞系統排版。
+3. 一次一步：跟隨步驟前進，絕對不要自行跳換步驟。
+4. 專業摘要標記：當使用者過關時，必須在最後使用 [STEP_COMPLETE: 摘要] 格式提煉使用者的核心意義。例如：[STEP_COMPLETE: 覺得自己被忽視]、[STEP_COMPLETE: 渴望被尊重]。
+
+${STAGE_GOALS[currentStep]}
 ${nextStepInstruction}
 語言：繁體中文。`;
 
@@ -264,7 +272,7 @@ function createMessage(text, isUser) {
     const w = document.createElement('div'); w.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const b = document.createElement('div'); b.className = `max-w-[90%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-sky-700 text-white rounded-tr-none' : 'bg-white border border-stone-200 text-slate-800 rounded-tl-none'}`;
     if (!isUser) b.innerHTML = `<div class="text-[9px] font-bold text-sky-600 mb-1 uppercase tracking-widest">心理教練</div>`;
-    // 修正 3：加入 break-words 防止超長連續文字(如網址或符號)撐破對話框
+    // 加入 break-words 防止超長連續文字(如網址或符號)撐破對話框
     const c = document.createElement('div'); c.className = 'whitespace-pre-wrap break-words leading-relaxed text-[14px]'; c.textContent = text;
     b.appendChild(c); w.appendChild(b); return w;
 }
@@ -305,9 +313,10 @@ async function handleSend() {
     
     if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
     
-    // 修正 4：強化過關判定，相容 AI 偶爾輸出的大寫、全形括號，防止系統卡死
-    const isComplete = coachResponse.includes("[STEP_COMPLETE]") || coachResponse.includes("STEP_COMPLETE"); 
-    const cleanResponse = coachResponse.replace(/\[?【?STEP_COMPLETE】?\]?/gi, "").trim();
+    // 💡 核心升級：精準擷取 AI 提煉的 [STEP_COMPLETE: 摘要]，讓冰山圖充滿專業感
+    const completeMatch = coachResponse.match(/\[?【?STEP_COMPLETE(?:[:：]\s*([^\]】]*))?】?\]?/i);
+    const isComplete = completeMatch !== null; 
+    const cleanResponse = coachResponse.replace(/\[?【?STEP_COMPLETE.*】?\]?/gi, "").trim();
     
     chatContainer.appendChild(createMessage(cleanResponse, false)); 
     
@@ -319,13 +328,24 @@ async function handleSend() {
     chatHistory.push({ role: "coach", text: cleanResponse });
 
     if (isComplete) {
-        const layerEl = document.getElementById(`layer-${currentStep}`); const textEl = document.getElementById(`layer-text-${currentStep}`); const analysisEl = document.getElementById(`layer-analysis-${currentStep}`);
+        const layerEl = document.getElementById(`layer-${currentStep}`); 
+        const textEl = document.getElementById(`layer-text-${currentStep}`); 
+        const analysisEl = document.getElementById(`layer-analysis-${currentStep}`);
+        
+        // 如果 AI 有產出精煉摘要，就優先使用摘要；否則退回使用用戶的原話
+        let icebergLabel = input;
+        if (completeMatch && completeMatch[1] && completeMatch[1].trim() !== "") {
+            icebergLabel = completeMatch[1].trim(); 
+        }
+
         if(layerEl && textEl && analysisEl) {
-            layerEl.classList.add('active'); textEl.textContent = input; textEl.classList.remove('italic');
-            // 修正 5：套用 escapeHTML 與 whitespace-pre-wrap break-words，保證冰山圖內的換行與文字絕不截斷
+            layerEl.classList.add('active'); 
+            textEl.textContent = icebergLabel; // 顯示專業摘要，不再是「可能1或3吧」
+            textEl.classList.remove('italic');
+            // 套用 escapeHTML 與 whitespace-pre-wrap break-words，保證冰山圖內的換行與文字絕不截斷
             analysisEl.innerHTML = `<span class="font-bold border-b border-current pb-0.5 inline-block mb-1">教練洞察分析：</span><br><span class="whitespace-pre-wrap break-words">${escapeHTML(cleanResponse)}</span>`; 
             analysisEl.classList.remove('hidden');
-            if (currentStep === 3) analyzedYearning = cleanResponse; 
+            if (currentStep === 3) analyzedYearning = icebergLabel; // 將提煉出來的完美渴望存起來，作為下一階段煉金的起點！
         }
         currentStep++;
         if (currentStep < STAGES.length) {
