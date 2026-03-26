@@ -80,7 +80,6 @@
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-4 bg-[#fcfcfc]"></div>
         <div class="p-4 bg-white border-t border-stone-100 shrink-0 z-30">
             <div id="input-area" class="flex flex-col gap-3">
-                <!-- 故意不一開始就 disabled，利用沉沒成本讓使用者打字，按下送出才擋 -->
                 <textarea id="user-input" rows="2" class="w-full resize-none rounded-xl border border-stone-300 p-3 text-sm focus:ring-2 focus:ring-sky-600 bg-stone-50 transition-all" placeholder="請輸入您的回答 (不知道可直說)..."></textarea>
                 <div class="flex justify-between items-center"><span id="step-indicator" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Phase 1/5</span><button id="btn-send" class="bg-sky-700 hover:bg-sky-800 text-white px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">送出 ➤</button></div>
             </div>
@@ -136,7 +135,7 @@
 <!-- ================= 核心邏輯 ================= -->
 <script>
 // 變更：將預設 URL 直接指向 Vercel 的相對路徑，免除手動設定的煩惱
-const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
+const DEFAULT_PROXY_URL = "/api/chat"; 
 
 const STAGE_GOALS = [
     "▶ 目前階段：【行為與感受】。使用者描述事件與情緒。請同理並剖析。",
@@ -182,11 +181,18 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
 async function callGemini(userMessage) {
-    let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
-    
-    // 如果使用者手動輸入了包含 http 的絕對網址，才做額外處理，否則直接使用 /api/chat
-    if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) {
-        proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
+    // 🚀 終極防呆：徹底移除舊的 localStorage 讀取，強制綁定 Vercel 內部相對路徑
+    const proxyUrl = "/api/chat";
+
+    // 本地端開發的防呆機制
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+    if (isLocalhost) {
+        showModal(
+            "需要連線至 Vercel 伺服器", 
+            "您目前正在自己的電腦上預覽網頁，但電腦裡沒有大腦 (API 後端)，所以會發生 404 錯誤！\n\n請直接前往您發布好的 Vercel 正式網址測試。", 
+            "🚧"
+        );
+        return "❌ 系統阻擋：請至 Vercel 正式網址進行測試。";
     }
 
     const stageGoal = STAGE_GOALS[currentStep];
