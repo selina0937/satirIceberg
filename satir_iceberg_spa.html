@@ -202,7 +202,6 @@ async function callGemini(userMessage) {
         ? "【下一步指令】這是最後一步。不要再提問。請給予一段精闢洞察總結，並『務必』在最尾端加上 [STEP_COMPLETE] 標記。"
         : "【下一步指令】若回答過關，請先給予簡短分析，然後『務必』一字不漏地拋出以下問題繼續引導：\n" + STAGES[currentStep].nextQ + "\n\n最尾端加上 [STEP_COMPLETE]。絕對不可自己發明問題！";
 
-    // 修正 2：加強 System Prompt，強制禁用 Markdown 且再次強調極限字數，防止被 API 截斷
     const systemInstruction = `你是精通薩提爾模型的心理教練。
 1. 嚴格字數限制：每次回覆總字數絕對不可超過 150 字！保持極度精煉，避免文字過長被系統截斷而遺失標記。
 2. 禁止使用 Markdown：請以純文字對話，絕對不要使用星號 (**) 等格式符號，這會導致畫面顯示異常或文字截斷。
@@ -214,27 +213,51 @@ ${nextStepInstruction}
 語言：繁體中文。`;
 
     const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
-    try {
-        const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction }) });
-        
-        if (res.ok) {
-            const data = await res.json(); 
-            if(data.tokenUsage && currentUserUid && updateFirestoreTokens) {
-                const used = data.tokenUsage.totalTokenCount;
-                await updateFirestoreTokens(used);
+    
+    // 指數退避重試設定 (Exponential Backoff): 1s, 2s, 4s, 8s, 16s
+    const retryDelays = [1000, 2000, 4000, 8000, 16000];
+    const maxRetries = retryDelays.length;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction }) });
+            
+            if (res.ok) {
+                const data = await res.json(); 
+                if(data.tokenUsage && currentUserUid && updateFirestoreTokens) {
+                    const used = data.tokenUsage.totalTokenCount;
+                    await updateFirestoreTokens(used);
+                }
+                return data.text;
+            } else {
+                // 如果遇到 503(高負載) 或 429(額度耗盡)，且還有重試次數，就等待後重新呼叫
+                if ((res.status === 503 || res.status === 429) && attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+                    continue; // 進行下一次迴圈 (重試)
+                }
+
+                // 如果重試次數用盡，或是遇到非 503/429 的其他錯誤，則解析並顯示錯誤
+                const errorText = await res.text();
+                let errorMessage = `HTTP ${res.status}`;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    if (errorJson.error) errorMessage += ` - ${errorJson.error.message || errorJson.error}`;
+                } catch (e) { errorMessage += ` - ${errorText.substring(0, 50)}...`; }
+                
+                if (res.status === 429) return "⚠️ 【系統提示：目前使用人數過多，請稍後再試！】\n\n系統已自動重試但仍忙碌中，請等候一分鐘後再送出。";
+                if (res.status === 503) return "⚠️ 【系統提示：AI 伺服器目前超載 (503)】\n\nGoogle AI 伺服器正經歷短暫的高流量，系統已在背景重試數次但未能成功。請稍等幾分鐘後再試一次！";
+                
+                return `❌ 伺服器異常 (${errorMessage})`;
             }
-            return data.text;
-        } else {
-            const errorText = await res.text();
-            let errorMessage = `HTTP ${res.status}`;
-            try {
-                const errorJson = JSON.parse(errorText);
-                if (errorJson.error) errorMessage += ` - ${errorJson.error.message || errorJson.error}`;
-            } catch (e) { errorMessage += ` - ${errorText.substring(0, 50)}...`; }
-            if (res.status === 429) return "⚠️ 【系統提示：API 額度耗盡 (HTTP 429)】\n\n模擬過關。\n\n教練分析：您的覺察很深刻！ [STEP_COMPLETE]";
-            return `❌ 伺服器異常 (${errorMessage})`;
+        } catch (err) { 
+            // 處理網路斷線或 Fetch 失敗的情況，一樣進行重試
+            if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+                continue;
+            }
+            return `❌ 連線失敗: ${err.message}`; 
         }
-    } catch (err) { return `❌ 連線失敗: ${err.message}`; }
+    }
 }
 
 function createMessage(text, isUser) {
@@ -273,8 +296,9 @@ async function handleSend() {
     userInputArea.value = ''; userInputArea.disabled = true; sendBtn.disabled = true;
     if (currentStep === 0 && !localStorage.getItem('satir_event_context')) localStorage.setItem('satir_event_context', input);
 
+    // 可以在文字中提示使用者正在連線
     const typing = document.createElement('div'); typing.id = 'typing-indicator'; typing.className = 'flex justify-start chat-bubble-enter';
-    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中... (將扣除點數)</div></div>`;
+    typing.innerHTML = `<div class="bg-white border border-stone-200 p-3 rounded-xl shadow-sm"><div class="text-[10px] text-slate-400 italic">教練精準分析中... (若遇高流量將自動為您重新連線)</div></div>`;
     chatContainer.appendChild(typing); chatContainer.scrollTop = chatContainer.scrollHeight;
 
     const coachResponse = await callGemini(input);
@@ -285,9 +309,14 @@ async function handleSend() {
     const isComplete = coachResponse.includes("[STEP_COMPLETE]") || coachResponse.includes("STEP_COMPLETE"); 
     const cleanResponse = coachResponse.replace(/\[?【?STEP_COMPLETE】?\]?/gi, "").trim();
     
-    chatContainer.appendChild(createMessage(cleanResponse, false)); chatHistory.push({ role: "coach", text: cleanResponse });
-
-    if (coachResponse.includes("❌")) { userInputArea.disabled = false; sendBtn.disabled = false; return; }
+    chatContainer.appendChild(createMessage(cleanResponse, false)); 
+    
+    // 若 AI 回覆中包含錯誤標記 ❌ 或 ⚠️，則不將該對話推入歷史紀錄，並恢復輸入框
+    if (coachResponse.includes("❌") || coachResponse.includes("⚠️")) { 
+        userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus(); return; 
+    }
+    
+    chatHistory.push({ role: "coach", text: cleanResponse });
 
     if (isComplete) {
         const layerEl = document.getElementById(`layer-${currentStep}`); const textEl = document.getElementById(`layer-text-${currentStep}`); const analysisEl = document.getElementById(`layer-analysis-${currentStep}`);
