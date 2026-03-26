@@ -54,7 +54,8 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1</span></h1>
+            <!-- 🚨 注意這裡加了 (v2)，這是用來確認快取有沒有更新的指標 -->
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v2)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -134,9 +135,6 @@
 
 <!-- ================= 核心邏輯 ================= -->
 <script>
-// 變更：將預設 URL 直接指向 Vercel 的相對路徑，免除手動設定的煩惱
-const DEFAULT_PROXY_URL = "https://satir-iceberg.vercel.app/api/chat"; 
-
 const STAGE_GOALS = [
     "▶ 目前階段：【行為與感受】。使用者描述事件與情緒。請同理並剖析。",
     "▶ 目前階段：【觀點與意義】。使用者回答對事件看法。請點出盲點。",
@@ -181,8 +179,8 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
 async function callGemini(userMessage) {
-    // 🚀 終極防呆：徹底移除舊的 localStorage 讀取，強制綁定 Vercel 內部相對路徑
-    const proxyUrl = "/api/chat";
+    // 🚀 終極防呆：強制使用絕對網址，徹底避免路徑解析錯誤與舊快取
+    const proxyUrl = window.location.origin + "/api/chat";
 
     // 本地端開發的防呆機制
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
@@ -212,6 +210,7 @@ ${nextStepInstruction}
     const context = chatHistory.slice(-6).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
     try {
         const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction }) });
+        
         if (res.ok) {
             const data = await res.json(); 
             // API 呼叫成功，扣除雲端 Token！
@@ -221,8 +220,20 @@ ${nextStepInstruction}
             }
             return data.text;
         } else {
+            // 🚨 抓鬼探測器：如果發生錯誤，印出背後真正的原因！
+            const errorText = await res.text();
+            let errorMessage = `HTTP ${res.status}`;
+            try {
+                // 嘗試解析是不是 Gemini 傳回來的錯誤
+                const errorJson = JSON.parse(errorText);
+                if (errorJson.error) errorMessage += ` - ${errorJson.error.message || errorJson.error}`;
+            } catch (e) {
+                errorMessage += ` - ${errorText.substring(0, 50)}...`;
+            }
+            
             if (res.status === 429) return "⚠️ 【系統提示：API 額度耗盡 (HTTP 429)】\n\n模擬過關。\n\n教練分析：您的覺察很深刻！ [STEP_COMPLETE]";
-            return `❌ 伺服器異常 (HTTP ${res.status})`;
+            
+            return `❌ 伺服器異常 (${errorMessage})`;
         }
     } catch (err) { return `❌ 連線失敗: ${err.message}`; }
 }
