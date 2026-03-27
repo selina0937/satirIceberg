@@ -300,7 +300,14 @@ async function handleSend() {
     const input = userInputArea.value.trim(); if (!input) return;
 
     if (!currentUserUid) {
-        showModal("需要登入以解鎖分析", "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 5,000 點免費新手體驗點數！", "🔒", "一鍵登入", () => { if(triggerGoogleLogin) triggerGoogleLogin(); });
+        showModal(
+            "需要登入以解鎖分析", 
+            // 💡 修正：將宣傳文字同步更新為 30,000 點
+            "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 30,000 點免費新手體驗點數！", 
+            "🔒", 
+            "一鍵登入", 
+            () => { if(triggerGoogleLogin) triggerGoogleLogin(); }
+        );
         return; 
     }
 
@@ -394,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
+    // TODO: 請替換為您的 Firebase Config
     const firebaseConfig = {
   apiKey: "AIzaSyCVUQRXSsmSqHriQNqRMRr7LjrRBSUhAhM",
   authDomain: "satir-iceberg.vercel.app",
@@ -478,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
