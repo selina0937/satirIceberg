@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnerSpace - 隱藏管理控制台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body class="text-slate-800 p-6 md:p-10">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">👑 管理控制台 (Admin)</h1>
+                <p class="text-slate-500 mt-2 font-medium">監控所有使用者的 Token 消耗量，作為未來定價與商業模式的精算依據。</p>
+            </div>
+            <div>
+                <button id="auth-btn" class="bg-slate-900 hover:bg-black text-white px-6 py-2 rounded-full font-bold shadow-md transition-all">管理員登入</button>
+            </div>
+        </div>
+
+        <!-- 數據統計卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden" id="stats-section">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-slate-500 font-bold text-sm mb-1 uppercase tracking-wider">總註冊人數</h3>
+                <p class="text-4xl font-black text-slate-800" id="stat-users">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-sky-500 font-bold text-sm mb-1 uppercase tracking-wider">總 Token 消耗量</h3>
+                <p class="text-4xl font-black text-sky-600" id="stat-used">0</p>
+                <p class="text-xs text-sky-400 mt-2 font-medium">估算 API 成本：約 $<span id="stat-cost">0</span> USD</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-emerald-500 font-bold text-sm mb-1 uppercase tracking-wider">系統未消耗餘額</h3>
+                <p class="text-4xl font-black text-emerald-600" id="stat-remaining">0</p>
+            </div>
+        </div>
+
+        <!-- 會員列表 -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hidden" id="table-section">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-sm">
+                            <th class="p-4 font-bold text-slate-600">使用者</th>
+                            <th class="p-4 font-bold text-slate-600">Email</th>
+                            <th class="p-4 font-bold text-emerald-600">目前餘額 (Token)</th>
+                            <th class="p-4 font-bold text-sky-600">累積消耗 (Token)</th>
+                            <th class="p-4 font-bold text-slate-600">加入時間</th>
+                            <th class="p-4 font-bold text-slate-600 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body" class="divide-y divide-slate-100">
+                        <!-- 資料由 JS 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="login-prompt" class="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm mt-8">
+            <span class="text-6xl mb-4 block">🔒</span>
+            <h2 class="text-xl font-bold text-slate-800">請先登入以檢視管理資料</h2>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // TODO: 請替換為您的 Firebase Config
+        const firebaseConfig = { 
+            apiKey: "YOUR_API_KEY", 
+            authDomain: "your-app.vercel.app", 
+            projectId: "YOUR_PROJECT_ID", 
+            storageBucket: "YOUR_PROJECT_ID.appspot.com", 
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", 
+            appId: "YOUR_APP_ID" 
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        const authBtn = document.getElementById('auth-btn');
+        const loginPrompt = document.getElementById('login-prompt');
+        const statsSection = document.getElementById('stats-section');
+        const tableSection = document.getElementById('table-section');
+        const tbody = document.getElementById('user-table-body');
+
+        // 綁定全域函數給 HTML onClick 使用
+        window.addTokens = async (uid, amount) => {
+            const btn = document.getElementById(`btn-${uid}`);
+            btn.disabled = true;
+            btn.innerText = "加值中...";
+            try {
+                await updateDoc(doc(db, "users", uid), { tokens: increment(amount) });
+                alert(`已成功為該用戶加值 ${amount} Tokens！`);
+                fetchUsers(); // 重新整理表格
+            } catch (e) {
+                console.error(e);
+                alert("加值失敗，請檢查權限。");
+                btn.disabled = false;
+                btn.innerText = "+10,000";
+            }
+        };
+
+        async function fetchUsers() {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500">載入數據中...</td></tr>';
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                let totalUsers = 0;
+                let totalUsed = 0;
+                let totalRemaining = 0;
+                let html = '';
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    totalUsers++;
+                    totalUsed += (data.totalTokensUsed || 0);
+                    totalRemaining += (data.tokens || 0);
+
+                    const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString('zh-TW') : '未知';
+                    
+                    html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 font-bold text-slate-800">${data.name || '無名氏'}</td>
+                            <td class="p-4 text-sm text-slate-500">${data.email || '無'}</td>
+                            <td class="p-4 font-black text-emerald-600">${(data.tokens || 0).toLocaleString()}</td>
+                            <td class="p-4 font-black text-sky-600">${(data.totalTokensUsed || 0).toLocaleString()}</td>
+                            <td class="p-4 text-sm text-slate-500">${date}</td>
+                            <td class="p-4 text-center">
+                                <button id="btn-${doc.id}" onclick="addTokens('${doc.id}', 10000)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 active:scale-95 transition-transform">
+                                    + 1萬點
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                document.getElementById('stat-users').innerText = totalUsers;
+                document.getElementById('stat-used').innerText = totalUsed.toLocaleString();
+                document.getElementById('stat-remaining').innerText = totalRemaining.toLocaleString();
+                // 估算成本: 1M tokens = $0.3 USD (以最高輸出計價抓寬裕值)
+                document.getElementById('stat-cost').innerText = (totalUsed * 0.0000003).toFixed(4);
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-red-500 font-bold">讀取失敗。請確認 Firebase 資料庫權限設定。</td></tr>';
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authBtn.innerText = "登出";
+                authBtn.onclick = () => signOut(auth);
+                loginPrompt.classList.add('hidden');
+                statsSection.classList.remove('hidden');
+                tableSection.classList.remove('hidden');
+                fetchUsers();
+            } else {
+                authBtn.innerText = "管理員登入";
+                authBtn.onclick = () => signInWithPopup(auth, provider);
+                loginPrompt.classList.remove('hidden');
+                statsSection.classList.add('hidden');
+                tableSection.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
