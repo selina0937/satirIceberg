@@ -16,31 +16,29 @@ export default async function handler(req, res) {
 
     const { contents, systemInstruction } = req.body;
 
-    // 2. 多把金鑰自動分流機制 (解決 429 錯誤的核心)
-    // 請務必在 Vercel 後台的 Environment Variables 中設定這些變數
     const keys = [
         process.env.GEMINI_API_KEY,
         process.env.GEMINI_API_KEY_2,
         process.env.GEMINI_API_KEY_3,
         process.env.GEMINI_API_KEY_4
-    ].filter(Boolean); // 過濾掉沒有設定的空值
+    ].filter(Boolean); 
 
     if (keys.length === 0) {
         return res.status(500).json({ error: "尚未設定任何 Gemini API Key" });
     }
 
-    // 隨機抽取一把鑰匙來分散流量
     const randomKey = keys[Math.floor(Math.random() * keys.length)];
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${randomKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${randomKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents,
                 systemInstruction: { parts: [{ text: systemInstruction }] },
                 generationConfig: { 
-                    maxOutputTokens: 1000,
+                    // 🚀 強制把天花板拉到極高
+                    maxOutputTokens: 1500,
                     temperature: 0.7 
                 }
             })
@@ -53,11 +51,11 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         
-        // 確保有回傳內容
         if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
             const text = data.candidates[0].content.parts[0].text;
             const tokenUsage = data.usageMetadata;
-            res.status(200).json({ text, tokenUsage });
+            // 🚨 終極抓鬼暗號：送出 backendVersion 給前端檢查
+            res.status(200).json({ text, tokenUsage, backendVersion: "v10" });
         } else {
              res.status(500).json({ error: "API 回傳格式異常，無文字內容。" });
         }
