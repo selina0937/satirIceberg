@@ -7,7 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; }
+        
+        /* 💡 商業保護升級：禁止全站文字選取與複製 */
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #f0f9ff; 
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+        /* 確保輸入框依然可以正常選取與修改文字 */
+        textarea, input {
+            -webkit-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
 
         .chat-bubble-enter { animation: bubbleIn 0.3s ease-out forwards; }
         @keyframes bubbleIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -59,12 +73,11 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v12)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v13)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
         
-        <!-- 餘額區塊：主動點擊時，帶入參數 false，表示「非強制儲值」 -->
         <div id="wallet-badge" onclick="showRechargeModal(false)" class="hidden items-center gap-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full shadow-sm transition-colors cursor-pointer" title="點擊前往儲值中心">
             <span class="text-[10px] text-sky-700 font-bold tracking-wider">餘額</span>
             <span id="token-balance" class="text-sm font-black text-sky-600">--</span>
@@ -139,7 +152,7 @@
     </div>
 </div>
 
-<!-- 💡 新增：新手迎賓禮包 Modal -->
+<!-- 新手迎賓禮包 Modal -->
 <div id="welcome-modal" class="hidden modal-overlay no-print z-[120]">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-sky-500 mx-4 relative overflow-hidden">
         <div class="text-center mb-6 relative z-10">
@@ -191,7 +204,6 @@
 
         <div class="flex justify-end gap-2 mt-6 relative z-10">
             <button onclick="closeRechargeModal()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-5 py-2.5 rounded-full font-bold text-sm">稍後再說</button>
-            <!-- 💡 將按鈕改為呼叫模擬金流函數 -->
             <button onclick="window.simulatePayment()" class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-full font-bold shadow-md transition-all text-sm flex items-center gap-2">
                 💳 前往結帳
             </button>
@@ -252,14 +264,14 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-// 💡 儲值中心 Modal 控制 (支援傳入是否為「被強制阻擋」的狀態)
-function showRechargeModal(isForced = false) { 
+// 💡 儲值中心 Modal 控制 (支援傳遞自訂說明文字，以便鎖定 PDF 時給予清楚引導)
+function showRechargeModal(isForced = false, customMsg = null) { 
     const title = document.getElementById('recharge-title');
     const desc = document.getElementById('recharge-desc');
     
     if (isForced) {
         title.innerText = "點數不足";
-        desc.innerHTML = "您的體驗點數已透支。為了提供最完整的深度分析，請選擇適合您的方案：";
+        desc.innerHTML = customMsg ? customMsg : "您的體驗點數已透支。為了提供最完整的深度分析，請選擇適合您的方案：";
     } else {
         title.innerText = "儲值中心";
         desc.innerHTML = "為您的心靈帳戶儲備能量。請選擇適合您的加值方案：";
@@ -268,7 +280,6 @@ function showRechargeModal(isForced = false) {
 }
 function closeRechargeModal() { document.getElementById('recharge-modal').classList.add('hidden'); }
 
-// 新手迎賓 Modal 控制
 function showWelcomeModal() { document.getElementById('welcome-modal').classList.remove('hidden'); }
 function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
 
@@ -283,11 +294,7 @@ async function callGemini(userMessage) {
 
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
     if (isLocalhost) {
-        showModal(
-            "需要連線至 Vercel 伺服器", 
-            "您目前正在自己的電腦上預覽網頁，但電腦裡沒有大腦 (API 後端)，所以會發生 404 錯誤！\n\n請直接前往您發布好的 Vercel 正式網址測試。", 
-            "🚧"
-        );
+        showModal("需要連線至 Vercel 伺服器", "您目前正在自己的電腦上預覽網頁，但電腦裡沒有大腦 (API 後端)，所以會發生 404 錯誤！\n\n請直接前往您發布好的 Vercel 正式網址測試。", "🚧");
         return "❌ 系統阻擋：請至 Vercel 正式網址進行測試。";
     }
 
@@ -323,16 +330,10 @@ ${nextStepInstruction}
             
             if (res.ok) {
                 const data = await res.json(); 
-                
                 if (data.backendVersion !== "v10") {
-                    showModal(
-                        "⚠️ Vercel 伺服器更新失敗", 
-                        "雖然您的 HTML 網頁是最新版，但系統偵測到您的 Vercel 伺服器還卡在舊版的 chat.js！這就是 AI 一直被截斷的原因（舊版有嚴格字數限制）。\n\n請前往 Vercel 後台的 Deployments，檢查是否發生錯誤，並點擊 Redeploy 強制重新部署！", 
-                        "👻"
-                    );
-                    return "❌ 系統阻擋：請先修復 Vercel 部署問題，否則對話將持續被截斷。";
+                    showModal("⚠️ Vercel 伺服器更新失敗", "系統偵測到您的 Vercel 伺服器還卡在舊版！請前往 Vercel 後台點擊 Redeploy 強制重新部署！", "👻");
+                    return "❌ 系統阻擋：請先修復 Vercel 部署問題。";
                 }
-
                 if(data.tokenUsage && currentUserUid && updateFirestoreTokens) {
                     const used = data.tokenUsage.totalTokenCount;
                     await updateFirestoreTokens(used);
@@ -343,7 +344,6 @@ ${nextStepInstruction}
                     await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
                     continue; 
                 }
-
                 const errorText = await res.text();
                 let errorMessage = `HTTP ${res.status}`;
                 try {
@@ -353,14 +353,10 @@ ${nextStepInstruction}
                 
                 if (res.status === 429) return "⚠️ 【系統提示：目前使用人數過多，請稍後再試！】\n\n系統已自動重試但仍忙碌中，請等候一分鐘後再送出。";
                 if (res.status === 503) return "⚠️ 【系統提示：AI 伺服器目前超載 (503)】\n\nGoogle AI 伺服器正經歷短暫的高流量，請稍等幾分鐘後再試一次！";
-                
                 return `❌ 伺服器異常 (${errorMessage})`;
             }
         } catch (err) { 
-            if (attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
-                continue;
-            }
+            if (attempt < maxRetries) { await new Promise(resolve => setTimeout(resolve, retryDelays[attempt])); continue; }
             return `❌ 連線失敗: ${err.message}`; 
         }
     }
@@ -378,17 +374,10 @@ async function handleSend() {
     const input = userInputArea.value.trim(); if (!input) return;
 
     if (!currentUserUid) {
-        showModal(
-            "需要登入以解鎖分析", 
-            "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 30,000 點免費新手體驗點數！", 
-            "🔒", 
-            "一鍵登入", 
-            () => { if(triggerGoogleLogin) triggerGoogleLogin(); }
-        );
+        showModal("需要登入以解鎖分析", "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 30,000 點免費新手體驗點數！", "🔒", "一鍵登入", () => { if(triggerGoogleLogin) triggerGoogleLogin(); });
         return; 
     }
 
-    // 當起步時發現點數小於等於0，傳入 true 強制顯示透支訊息
     if (currentStep === 0 && currentTokens <= 0) {
         showRechargeModal(true);
         return; 
@@ -461,12 +450,22 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('satir_event_context'); localStorage.removeItem('satir_discovered_yearning');
     document.getElementById('btn-start-alchemy').onclick = () => { window.location.href = 'actionSimulator.html'; };
 
+    // 💡 商業化升級：攔截 PDF 匯出事件，進行付費牆檢查
+    pdfBtn.onclick = () => {
+        if (currentTokens <= 0) {
+            // 如果餘額不足，阻止匯出並跳出專屬的儲值提示
+            showRechargeModal(true, "<span class='text-red-500 font-bold'>【專屬報告已鎖定】</span><br>您的體驗點數已透支。請先儲值以解鎖「匯出分析報告」功能，完整保存您專屬的深層轉化腳本！");
+        } else {
+            window.print();
+        }
+    };
+
     let logoClickCount = 0; const modalConfig = document.getElementById('modal-settings'); const proxyIn = document.getElementById('proxy-url-input');
     document.getElementById('header-logo').onclick = () => { logoClickCount++; if(logoClickCount >= 5) { modalConfig.classList.remove('hidden'); proxyIn.value = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL; logoClickCount = 0; } };
     document.getElementById('btn-modal-close').onclick = () => modalConfig.classList.add('hidden');
     document.getElementById('btn-modal-save').onclick = () => { localStorage.setItem('SATIR_PROXY_URL', proxyIn.value.trim()); modalConfig.classList.add('hidden'); location.reload(); };
 
-    pdfBtn.onclick = () => window.print(); sendBtn.onclick = handleSend;
+    sendBtn.onclick = handleSend;
     userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
     document.getElementById('btn-reset').onclick = () => location.reload();
     chatContainer.appendChild(createMessage("您好。請簡短描述一件最近讓你感到有情緒、受挫的事件。當時發生了什麼事？你採取了什麼應對姿態？真實情緒是什麼？", false));
@@ -512,18 +511,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // 💡 將模擬金流函數綁定到全域，供儲值中心的結帳按鈕使用
     window.simulatePayment = async () => {
         if(!currentUserUid) return;
         try {
             const userRef = doc(db, "users", currentUserUid);
-            // 點擊一次模擬結帳，自動加值 50,000 點
             await updateDoc(userRef, { tokens: increment(50000) });
             alert("💳 【金流測試模式】\n模擬結帳成功！已自動為您加值 50,000 Tokens。");
             closeRechargeModal();
-        } catch(e) {
-            console.error("加值失敗", e);
-        }
+        } catch(e) { console.error("加值失敗", e); }
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -554,7 +549,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalTokensUsed: 0,
                     createdAt: new Date()
                 });
-                // 💡 觸發新手迎賓禮包 Modal
                 showWelcomeModal();
             }
 
