@@ -59,13 +59,13 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v11)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v12)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
         
-        <!-- 💡 餘額區塊升級為可點擊的儲值按鈕 -->
-        <div id="wallet-badge" onclick="showRechargeModal()" class="hidden items-center gap-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full shadow-sm transition-colors cursor-pointer" title="點擊前往儲值中心">
+        <!-- 餘額區塊：主動點擊時，帶入參數 false，表示「非強制儲值」 -->
+        <div id="wallet-badge" onclick="showRechargeModal(false)" class="hidden items-center gap-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full shadow-sm transition-colors cursor-pointer" title="點擊前往儲值中心">
             <span class="text-[10px] text-sky-700 font-bold tracking-wider">餘額</span>
             <span id="token-balance" class="text-sm font-black text-sky-600">--</span>
             <span class="text-[10px] text-sky-500">T</span>
@@ -128,7 +128,7 @@
 </main>
 
 <!-- 共用 Modal -->
-<div id="custom-modal" class="hidden modal-overlay no-print">
+<div id="custom-modal" class="hidden modal-overlay no-print z-[100]">
     <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform transition-transform border-t-8 border-sky-600 mx-4">
         <h3 class="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2"><span id="modal-icon">💡</span><span id="modal-title">提示</span></h3>
         <p class="text-sm text-slate-600 mb-6 whitespace-pre-wrap leading-relaxed" id="modal-desc"></p>
@@ -139,15 +139,39 @@
     </div>
 </div>
 
-<!-- 💡 商業化升級：精美的儲值中心 Modal -->
+<!-- 💡 新增：新手迎賓禮包 Modal -->
+<div id="welcome-modal" class="hidden modal-overlay no-print z-[120]">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-sky-500 mx-4 relative overflow-hidden">
+        <div class="text-center mb-6 relative z-10">
+            <span class="text-5xl mb-2 block">🎉</span>
+            <h3 class="text-2xl font-black text-slate-800">歡迎來到 InnerSpace</h3>
+        </div>
+        <div class="space-y-4 text-sm text-slate-600 font-medium relative z-10">
+            <p class="text-center">我們已為您的帳戶注入了 <strong class="text-sky-600 text-lg">30,000</strong> 點新手體驗 Tokens！</p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-2">💡 新手指南：</h4>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>一次完整的冰山探索約消耗 <strong class="text-sky-600">8,000 ~ 12,000</strong> Tokens。</li>
+                    <li>您的額度足夠免費體驗約 <strong class="text-sky-600">2~3</strong> 次完整深度分析。</li>
+                    <li>系統具備「溫柔機制」，即使中途點數透支，也絕不會打斷您當次的探索對話。</li>
+                </ul>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-2">準備好開始您的內在探索之旅了嗎？</p>
+        </div>
+        <div class="mt-6 flex justify-center relative z-10">
+            <button onclick="closeWelcomeModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-all text-base">開始探索</button>
+        </div>
+    </div>
+</div>
+
+<!-- 儲值中心 Modal -->
 <div id="recharge-modal" class="hidden modal-overlay no-print z-[110]">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-sky-600 mx-4 relative overflow-hidden">
         <div class="absolute top-0 right-0 -mr-6 -mt-6 text-sky-100 opacity-30 text-9xl pointer-events-none">💎</div>
-        <h3 class="text-2xl font-black text-slate-800 mb-2 relative z-10">儲值中心</h3>
-        <p class="text-slate-600 mb-6 font-medium text-sm relative z-10">您的體驗點數已耗盡。為了提供最完整的深度分析，請選擇適合您的方案：</p>
+        <h3 class="text-2xl font-black text-slate-800 mb-2 relative z-10" id="recharge-title">儲值中心</h3>
+        <p class="text-slate-600 mb-6 font-medium text-sm relative z-10" id="recharge-desc">為您的心靈帳戶儲備能量。請選擇適合您的加值方案：</p>
         
         <div class="space-y-3 mb-6 relative z-10">
-            <!-- 方案 1 -->
             <div class="border-2 border-stone-200 hover:border-sky-500 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center group bg-white">
                 <div>
                     <h4 class="font-bold text-slate-800 text-base group-hover:text-sky-700">基礎探索包</h4>
@@ -155,7 +179,6 @@
                 </div>
                 <div class="text-lg font-black text-sky-600">NT$ 30</div>
             </div>
-            <!-- 方案 2 -->
             <div class="border-2 border-amber-400 bg-amber-50 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center relative shadow-md">
                 <span class="absolute -top-3 left-4 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">最熱銷</span>
                 <div>
@@ -168,11 +191,12 @@
 
         <div class="flex justify-end gap-2 mt-6 relative z-10">
             <button onclick="closeRechargeModal()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-5 py-2.5 rounded-full font-bold text-sm">稍後再說</button>
-            <button onclick="window.open('admin_dashboard.html', '_blank'); closeRechargeModal();" class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-full font-bold shadow-md transition-all text-sm flex items-center gap-2">
+            <!-- 💡 將按鈕改為呼叫模擬金流函數 -->
+            <button onclick="window.simulatePayment()" class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-full font-bold shadow-md transition-all text-sm flex items-center gap-2">
                 💳 前往結帳
             </button>
         </div>
-        <p class="text-center text-[10px] text-slate-400 mt-4 relative z-10">目前為測試階段，點擊將導向管理控制台進行免費手動加值。</p>
+        <p class="text-center text-[10px] text-slate-400 mt-4 relative z-10">【測試階段】點擊結帳將自動模擬付款，為您免費加值。</p>
     </div>
 </div>
 
@@ -228,9 +252,25 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-// 儲值中心 Modal 控制
-function showRechargeModal() { document.getElementById('recharge-modal').classList.remove('hidden'); }
+// 💡 儲值中心 Modal 控制 (支援傳入是否為「被強制阻擋」的狀態)
+function showRechargeModal(isForced = false) { 
+    const title = document.getElementById('recharge-title');
+    const desc = document.getElementById('recharge-desc');
+    
+    if (isForced) {
+        title.innerText = "點數不足";
+        desc.innerHTML = "您的體驗點數已透支。為了提供最完整的深度分析，請選擇適合您的方案：";
+    } else {
+        title.innerText = "儲值中心";
+        desc.innerHTML = "為您的心靈帳戶儲備能量。請選擇適合您的加值方案：";
+    }
+    document.getElementById('recharge-modal').classList.remove('hidden'); 
+}
 function closeRechargeModal() { document.getElementById('recharge-modal').classList.add('hidden'); }
+
+// 新手迎賓 Modal 控制
+function showWelcomeModal() { document.getElementById('welcome-modal').classList.remove('hidden'); }
+function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
 
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, tag => ({
@@ -348,9 +388,9 @@ async function handleSend() {
         return; 
     }
 
-    // 💡 商業化防線：當起步時發現點數小於等於0，直接呼叫華麗的儲值中心！
+    // 當起步時發現點數小於等於0，傳入 true 強制顯示透支訊息
     if (currentStep === 0 && currentTokens <= 0) {
-        showRechargeModal();
+        showRechargeModal(true);
         return; 
     }
 
@@ -472,17 +512,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // 💡 將模擬金流函數綁定到全域，供儲值中心的結帳按鈕使用
+    window.simulatePayment = async () => {
+        if(!currentUserUid) return;
+        try {
+            const userRef = doc(db, "users", currentUserUid);
+            // 點擊一次模擬結帳，自動加值 50,000 點
+            await updateDoc(userRef, { tokens: increment(50000) });
+            alert("💳 【金流測試模式】\n模擬結帳成功！已自動為您加值 50,000 Tokens。");
+            closeRechargeModal();
+        } catch(e) {
+            console.error("加值失敗", e);
+        }
+    };
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUserUid = user.uid;
             
-            // 💡 Bug 修復：加入空值安全網，確保大頭貼與名字絕不破圖
             const photoUrl = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
             const displayName = user.displayName || user.email.split('@')[0];
 
             userInfo.innerHTML = `<img src="${photoUrl}" class="w-6 h-6 rounded-full border border-stone-200"><span class="text-xs font-bold text-stone-600">${displayName}</span>`;
             
-            // 💡 Bug 修復：使用純淨的方式替換按鈕樣式，確保「登出」絕不出錯
             authBtn.innerText = `登出`; 
             authBtn.classList.remove('text-stone-600'); 
             authBtn.classList.add('text-red-500'); 
@@ -502,6 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalTokensUsed: 0,
                     createdAt: new Date()
                 });
+                // 💡 觸發新手迎賓禮包 Modal
+                showWelcomeModal();
             }
 
             unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
@@ -515,7 +569,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         tokenBalanceDisplay.classList.replace('text-red-500', 'text-sky-600');
                     }
 
-                    // 💡 如果在第一步且點數低於0，提示使用者點擊儲值
                     if (currentStep === 0 && currentTokens < 0) {
                         userInputArea.placeholder = "⚠️ 點數已透支，請點擊右上方餘額按鈕進行儲值...";
                     }
