@@ -14,12 +14,10 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
 
-        /* 冰山圖內部滾動軸：保護排版不溢出水面線 */
         .iceberg-box-scroll { max-height: 140px; overflow-y: auto; padding-right: 8px; }
         .iceberg-box-scroll::-webkit-scrollbar { width: 4px; }
         .iceberg-box-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
 
-        /* 深海錨定排版更新 */
         .iceberg-container { position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; align-items: center; z-index: 1; box-shadow: inset 0 10px 30px rgba(0,0,0,0.2); min-height: 80vh; background-color: #0f172a; }
         .visual-layer { transition: all 0.5s ease-out; opacity: 0.1; transform: translateY(15px); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.8); margin: 0 auto 12px auto; overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 10; border-radius: 16px; }
         .visual-layer.active { opacity: 1; transform: translateY(0); }
@@ -46,7 +44,7 @@
             .ai-q-box { width: 30% !important; border-right: 2px solid #ddd !important; background: #f8fafc !important; }
             .user-a-box { width: 70% !important; background: #fff !important; }
             .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 12pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
-            .iceberg-box-scroll { max-height: none !important; overflow: visible !important; } /* 列印時解除捲動限制 */
+            .iceberg-box-scroll { max-height: none !important; overflow: visible !important; } 
             .layer-4 { background: #fff !important; border-color: #333 !important; } .layer-4 .ai-q-box { background: #f8fafc !important; border-bottom-color: #ddd !important; } .layer-4 .user-a-box { background: #fff !important; } .layer-4 p, .layer-4 div, .layer-4 h4, .layer-4 span, .layer-4 .ai-analysis-text { color: #000 !important; text-shadow: none !important; }
         }
         .print-title { display: none; } #pdf-fixed-bg { display: none; }
@@ -61,15 +59,19 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v10)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v11)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
-        <div id="wallet-badge" class="hidden items-center gap-1.5 bg-sky-50 border border-sky-100 px-3 py-1.5 rounded-full shadow-inner">
+        
+        <!-- 💡 餘額區塊升級為可點擊的儲值按鈕 -->
+        <div id="wallet-badge" onclick="showRechargeModal()" class="hidden items-center gap-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full shadow-sm transition-colors cursor-pointer" title="點擊前往儲值中心">
             <span class="text-[10px] text-sky-700 font-bold tracking-wider">餘額</span>
             <span id="token-balance" class="text-sm font-black text-sky-600">--</span>
             <span class="text-[10px] text-sky-500">T</span>
+            <span class="ml-1 text-sky-600 font-bold">➕</span>
         </div>
+
         <div id="user-info" class="flex items-center gap-2 hidden md:flex"></div>
         <button id="auth-btn" class="bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">登入</button>
         <div class="w-px h-4 bg-stone-300 mx-1"></div>
@@ -99,19 +101,16 @@
         
         <div id="iceberg-visual" class="w-full flex-1 flex flex-col items-center relative">
             <div class="iceberg-container w-full max-w-2xl mx-auto relative pt-0 pb-10">
-                
                 <div class="absolute top-0 left-0 w-full h-[800px] z-[0] overflow-hidden pointer-events-none rounded-t-2xl">
                     <img id="iceberg-bg-img" src="Gemini_Generated_Image_k8rsjbk8rsjbk8rs.png" alt="Iceberg Background" class="w-full h-full object-cover object-top opacity-80">
                     <div class="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-[#0f172a] to-transparent"></div>
                 </div>
                 
-                <!-- 完美套用您的 350px 水面線 -->
                 <div id="waterline" class="absolute top-[350px] left-0 w-full border-b-2 border-dashed border-sky-300/40 flex justify-center z-10 no-print">
                     <span class="px-4 py-0.5 bg-sky-900/60 backdrop-blur-sm text-sky-100 text-[10px] font-bold absolute -top-3 rounded-full tracking-widest shadow-sm border border-sky-400/30">🌊 意識與潛意識界線</span>
                 </div>
 
                 <div class="w-full relative z-10 flex flex-col items-center px-2">
-                    
                     <div class="w-full h-[350px] flex justify-center items-end pb-8">
                         <div id="layer-0" class="layer-0 visual-layer active border-t-4 border-sky-400 w-full mb-0"><div class="ai-q-box"><h4 class="font-bold text-[10px] text-sky-700 uppercase mb-1">1. 行為與感受</h4></div><div class="user-a-box"><div id="layer-text-0" class="text-[13px] text-slate-800 font-bold whitespace-pre-wrap break-words">等待輸入事件...</div><div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t border-slate-200/60 text-[12px] text-sky-800 leading-relaxed font-medium whitespace-pre-wrap break-words"></div></div></div>
                     </div>
@@ -140,7 +139,44 @@
     </div>
 </div>
 
-<div id="modal-settings" class="hidden modal-overlay no-print">
+<!-- 💡 商業化升級：精美的儲值中心 Modal -->
+<div id="recharge-modal" class="hidden modal-overlay no-print z-[110]">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-sky-600 mx-4 relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mr-6 -mt-6 text-sky-100 opacity-30 text-9xl pointer-events-none">💎</div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2 relative z-10">儲值中心</h3>
+        <p class="text-slate-600 mb-6 font-medium text-sm relative z-10">您的體驗點數已耗盡。為了提供最完整的深度分析，請選擇適合您的方案：</p>
+        
+        <div class="space-y-3 mb-6 relative z-10">
+            <!-- 方案 1 -->
+            <div class="border-2 border-stone-200 hover:border-sky-500 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center group bg-white">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-base group-hover:text-sky-700">基礎探索包</h4>
+                    <p class="text-xs text-slate-500">10,000 Tokens (約 1 次完整分析)</p>
+                </div>
+                <div class="text-lg font-black text-sky-600">NT$ 30</div>
+            </div>
+            <!-- 方案 2 -->
+            <div class="border-2 border-amber-400 bg-amber-50 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center relative shadow-md">
+                <span class="absolute -top-3 left-4 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">最熱銷</span>
+                <div>
+                    <h4 class="font-bold text-amber-900 text-base">深度覺察包</h4>
+                    <p class="text-xs text-amber-700/80">50,000 Tokens + 贈 5,000</p>
+                </div>
+                <div class="text-lg font-black text-amber-600">NT$ 150</div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6 relative z-10">
+            <button onclick="closeRechargeModal()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-5 py-2.5 rounded-full font-bold text-sm">稍後再說</button>
+            <button onclick="window.open('admin_dashboard.html', '_blank'); closeRechargeModal();" class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-full font-bold shadow-md transition-all text-sm flex items-center gap-2">
+                💳 前往結帳
+            </button>
+        </div>
+        <p class="text-center text-[10px] text-slate-400 mt-4 relative z-10">目前為測試階段，點擊將導向管理控制台進行免費手動加值。</p>
+    </div>
+</div>
+
+<div id="modal-settings" class="hidden modal-overlay no-print z-50">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-slate-900">
         <h3 class="text-xl font-bold mb-2">⚙️ API 配置中心</h3>
         <input type="text" id="proxy-url-input" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-xl" placeholder="https://your-app.vercel.app/api/chat">
@@ -192,6 +228,10 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
+// 儲值中心 Modal 控制
+function showRechargeModal() { document.getElementById('recharge-modal').classList.remove('hidden'); }
+function closeRechargeModal() { document.getElementById('recharge-modal').classList.add('hidden'); }
+
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, tag => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -220,7 +260,6 @@ async function callGemini(userMessage) {
 2. 若確認過關：請先給予精煉的解析，接著『務必』換行加上分隔線「---」，然後一字不漏拋出下一個問題：\n「${STAGES[currentStep].nextQ}」
 3. 拋出問題後，『務必』在最尾端加上：[STEP_COMPLETE: 使用者此階段的答案摘要(10字內)]。絕對不可發明其他問題！`;
 
-    // 💡 確保 Prompt 絕對沒有字數枷鎖，且強制完整作結
     const systemInstruction = `你是具備心理治療博士背景的資深薩提爾教練。你的分析一針見血且充滿同理心。
 
 【核心規則】
@@ -245,7 +284,6 @@ ${nextStepInstruction}
             if (res.ok) {
                 const data = await res.json(); 
                 
-                // 🚨 終極抓鬼防線：檢查後端是否真的是最新版
                 if (data.backendVersion !== "v10") {
                     showModal(
                         "⚠️ Vercel 伺服器更新失敗", 
@@ -302,7 +340,6 @@ async function handleSend() {
     if (!currentUserUid) {
         showModal(
             "需要登入以解鎖分析", 
-            // 💡 修正：將宣傳文字同步更新為 30,000 點
             "系統已準備好為您進行深度潛意識解碼。\n\n請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 30,000 點免費新手體驗點數！", 
             "🔒", 
             "一鍵登入", 
@@ -311,8 +348,9 @@ async function handleSend() {
         return; 
     }
 
+    // 💡 商業化防線：當起步時發現點數小於等於0，直接呼叫華麗的儲值中心！
     if (currentStep === 0 && currentTokens <= 0) {
-        showModal("體驗點數已耗盡", "您的靈魂體驗點數已用完。為了提供最完整的深度分析，請您儲值後再開啟新的冰山探索。\n\n(金流系統建置中，您可以請管理員手動至資料庫為您加值！)", "💳");
+        showRechargeModal();
         return; 
     }
 
@@ -428,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFirestoreTokens = async (usedTokens) => {
         if(!currentUserUid) return;
         const userRef = doc(db, "users", currentUserUid);
-        // 💡 偷偷記錄累積消耗量，方便管理員後台成本核算
         await updateDoc(userRef, { 
             tokens: increment(-usedTokens),
             totalTokensUsed: increment(usedTokens)
@@ -439,8 +476,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             currentUserUid = user.uid;
             
-            authBtn.classList.replace('text-stone-600', 'text-red-500'); 
+            // 💡 Bug 修復：加入空值安全網，確保大頭貼與名字絕不破圖
+            const photoUrl = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+            const displayName = user.displayName || user.email.split('@')[0];
+
+            userInfo.innerHTML = `<img src="${photoUrl}" class="w-6 h-6 rounded-full border border-stone-200"><span class="text-xs font-bold text-stone-600">${displayName}</span>`;
+            
+            // 💡 Bug 修復：使用純淨的方式替換按鈕樣式，確保「登出」絕不出錯
+            authBtn.innerText = `登出`; 
+            authBtn.classList.remove('text-stone-600'); 
+            authBtn.classList.add('text-red-500'); 
             authBtn.onclick = () => signOut(auth);
+            
             walletBadge.classList.remove('hidden');
             walletBadge.classList.add('flex');
 
@@ -449,9 +496,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!userSnap.exists()) {
                 await setDoc(userRef, {
-                    name: user.displayName,
+                    name: displayName,
                     email: user.email,
-                    tokens: 30000, // 💡 給予新手 3 萬點額度，足夠完成約 3 次完整分析
+                    tokens: 30000,
                     totalTokensUsed: 0,
                     createdAt: new Date()
                 });
@@ -467,6 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         tokenBalanceDisplay.classList.replace('text-red-500', 'text-sky-600');
                     }
+
+                    // 💡 如果在第一步且點數低於0，提示使用者點擊儲值
+                    if (currentStep === 0 && currentTokens < 0) {
+                        userInputArea.placeholder = "⚠️ 點數已透支，請點擊右上方餘額按鈕進行儲值...";
+                    }
                 }
             });
 
@@ -479,14 +531,12 @@ document.addEventListener('DOMContentLoaded', () => {
             walletBadge.classList.add('hidden');
             walletBadge.classList.remove('flex');
             
-            authBtn.innerHTML = `登入`; authBtn.classList.replace('text-red-500', 'text-stone-600');
+            authBtn.innerText = `登入`; 
+            authBtn.classList.remove('text-red-500');
+            authBtn.classList.add('text-stone-600');
             authBtn.onclick = triggerGoogleLogin;
         }
     });
 </script>
 </body>
 </html>
-
-
-
-
