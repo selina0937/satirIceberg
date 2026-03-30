@@ -8,15 +8,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         
-        /* 💡 商業保護升級：禁止全站文字選取與複製 */
+        /* 商業保護升級：禁止全站文字選取與複製 */
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             background-color: #f0f9ff; 
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none; 
         }
-        /* 確保輸入框依然可以正常選取與修改文字 */
         textarea, input {
             -webkit-user-select: text;
             -ms-user-select: text;
@@ -73,7 +72,7 @@
     <div class="flex items-center gap-4">
         <a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-sky-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a>
         <div class="flex items-center gap-2 cursor-pointer" id="header-logo" title="連點 5 下配置 API">
-            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v13)</span></h1>
+            <span class="text-2xl">🧊</span><h1 class="text-base font-bold tracking-tight">冰山探索工具 <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded">Phase 1 (v14)</span></h1>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -264,7 +263,6 @@ function showModal(title, desc, icon = '💡', actionText = null, actionFn = nul
 
 function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
 
-// 💡 儲值中心 Modal 控制 (支援傳遞自訂說明文字，以便鎖定 PDF 時給予清楚引導)
 function showRechargeModal(isForced = false, customMsg = null) { 
     const title = document.getElementById('recharge-title');
     const desc = document.getElementById('recharge-desc');
@@ -450,10 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('satir_event_context'); localStorage.removeItem('satir_discovered_yearning');
     document.getElementById('btn-start-alchemy').onclick = () => { window.location.href = 'actionSimulator.html'; };
 
-    // 💡 商業化升級：攔截 PDF 匯出事件，進行付費牆檢查
     pdfBtn.onclick = () => {
         if (currentTokens <= 0) {
-            // 如果餘額不足，阻止匯出並跳出專屬的儲值提示
             showRechargeModal(true, "<span class='text-red-500 font-bold'>【專屬報告已鎖定】</span><br>您的體驗點數已透支。請先儲值以解鎖「匯出分析報告」功能，完整保存您專屬的深層轉化腳本！");
         } else {
             window.print();
@@ -563,8 +559,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         tokenBalanceDisplay.classList.replace('text-red-500', 'text-sky-600');
                     }
 
-                    if (currentStep === 0 && currentTokens < 0) {
-                        userInputArea.placeholder = "⚠️ 點數已透支，請點擊右上方餘額按鈕進行儲值...";
+                    // 💡 Bug 修復：當餘額為正數時，把警告文字恢復為原本的提示
+                    if (currentStep === 0) {
+                        if (currentTokens <= 0) {
+                            userInputArea.placeholder = "⚠️ 點數已透支，請點擊右上方餘額按鈕進行儲值...";
+                        } else {
+                            userInputArea.placeholder = "請輸入您的回答 (不知道可直說)...";
+                        }
                     }
                 }
             });
