@@ -7,7 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fefce8; }
+        
+        /* 💡 商業保護升級：禁止全站文字選取與複製 */
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #fefce8; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none; 
+        }
+        /* 確保輸入框依然可以正常選取與修改文字 */
+        textarea, input {
+            -webkit-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
         .visual-layer { transition: all 0.4s ease-out; opacity: 0.1; transform: translateY(10px); }
         .visual-layer.active { opacity: 1; transform: translateY(0); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
         .chat-bubble-enter { animation: bubbleIn 0.3s ease-out forwards; }
@@ -23,13 +38,16 @@
             main { display: block !important; } #chat-section { display: none !important; } 
             #visual-section { width: 100% !important; display: block !important; padding: 0 !important; background: white !important; }
             .print-title { display: block !important; text-align: center; margin-bottom: 1cm; border-bottom: 3px solid #000; padding-bottom: 15px; }
-            .visual-layer { page-break-inside: avoid !important; margin-bottom: 25px !important; border: 2px solid #333 !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; background: #fff !important; }
+            .visual-layer { opacity: 1 !important; transform: none !important; page-break-inside: avoid !important; margin-bottom: 25px !important; border: 2px solid #333 !important; border-radius: 12px !important; display: flex !important; flex-direction: row !important; background: #fff !important; }
             .ai-q-box { width: 30% !important; background: #fffbeb !important; border-right: 2px solid #ddd !important; padding: 15px !important; display: block !important; }
             .user-a-box { width: 70% !important; padding: 15px !important; display: block !important; }
             .visual-layer p, .visual-layer div, .ai-analysis-text { color: #000 !important; font-size: 12pt !important; line-height: 1.6; -webkit-line-clamp: unset !important; white-space: pre-wrap !important; }
         }
         .print-title { display: none; } .ai-q-box { display: none; } 
         @media screen { .ai-q-box { display: flex; flex-direction: column; justify-content: center; width: 30%; border-right: 1px solid #fde68a; background: #fffbeb; padding: 16px; } .user-a-box { display: flex; flex-direction: column; justify-content: center; width: 70%; padding: 16px; } }
+        
+        /* Modal 共用樣式 */
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 100; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-900">
@@ -37,8 +55,16 @@
 <div id="token-secret-btn" class="fixed bottom-0 right-0 w-16 h-16 z-50 cursor-default" title="雙擊查看 Token 消耗" ondblclick="showTokenUsage()"></div>
 
 <header class="bg-white border-b border-amber-200 px-6 py-3 flex justify-between items-center shadow-sm shrink-0 z-40 no-print">
-    <div class="flex items-center gap-4"><a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a><div class="flex items-center gap-2"><span class="text-2xl">✨</span><h1 class="text-base font-bold tracking-tight text-amber-900">內在煉金模擬器 <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded ml-1">Stage 2</span></h1></div></div>
+    <div class="flex items-center gap-4"><a href="index.html" class="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-600 transition-colors bg-stone-100 px-3 py-1.5 rounded-full"><span>🏠</span> 首頁</a><div class="flex items-center gap-2"><span class="text-2xl">✨</span><h1 class="text-base font-bold tracking-tight text-amber-900">內在煉金模擬器 <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded ml-1">Stage 2 (商業版)</span></h1></div></div>
     <div class="flex items-center gap-3">
+        <!-- 💡 商業化升級：點數錢包 Badge -->
+        <div id="wallet-badge" onclick="showRechargeModal(false)" class="hidden items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-full shadow-sm transition-colors cursor-pointer" title="點擊前往儲值中心">
+            <span class="text-[10px] text-amber-700 font-bold tracking-wider">餘額</span>
+            <span id="token-balance" class="text-sm font-black text-amber-600">--</span>
+            <span class="text-[10px] text-amber-500">T</span>
+            <span class="ml-1 text-amber-600 font-bold">➕</span>
+        </div>
+
         <div id="user-info" class="flex items-center gap-2 hidden md:flex"></div>
         <button id="auth-btn" class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center shadow-sm transition-all">登入</button>
         <div class="w-px h-4 bg-amber-200 mx-1"></div>
@@ -82,19 +108,78 @@
         </div>
 
         <div class="w-full max-w-2xl mx-auto space-y-4 relative z-0">
-            <div id="layer-0" class="visual-layer active bg-white border border-amber-200 rounded-2xl flex flex-row"><div class="ai-q-box"><h4 class="font-bold text-[10px] text-amber-800 uppercase mb-2">1. 擁抱脆弱</h4></div><div class="user-a-box"><div id="layer-text-0" class="text-[13px] font-bold">等待輸入...</div><div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t text-[12px] text-amber-800"></div></div></div>
-            <div id="layer-1" class="visual-layer bg-white border border-orange-200 rounded-2xl flex flex-row"><div class="ai-q-box bg-orange-50 border-orange-200"><h4 class="font-bold text-[10px] text-orange-800 uppercase mb-2">2. 內在百寶箱</h4></div><div class="user-a-box"><div id="layer-text-1" class="text-[13px] font-bold italic">尚未選擇法寶...</div><div id="layer-analysis-1" class="hidden mt-3 pt-3 border-t text-[12px] text-orange-800"></div></div></div>
-            <div id="layer-2" class="visual-layer bg-white border border-red-200 rounded-2xl flex flex-row"><div class="ai-q-box bg-red-50 border-red-200"><h4 class="font-bold text-[10px] text-red-800 uppercase mb-2">3. 教練視角</h4></div><div class="user-a-box"><div id="layer-text-2" class="text-[13px] font-bold italic">尚未切換視角...</div><div id="layer-analysis-2" class="hidden mt-3 pt-3 border-t text-[12px] text-red-800"></div></div></div>
-            <div id="layer-3" class="visual-layer bg-slate-900 border border-slate-800 rounded-3xl flex flex-row mt-4 mb-8"><div class="ai-q-box bg-slate-800"><h4 class="font-bold text-[11px] text-amber-400 uppercase mb-2">4. 真心話劇本</h4></div><div class="user-a-box p-6"><div id="layer-text-3" class="text-[15px] text-amber-50 font-bold italic">準備預演未來...</div><div id="layer-analysis-3" class="hidden mt-4 pt-4 border-t border-slate-700 text-[13px] text-amber-200"></div></div></div>
+            <div id="layer-0" class="visual-layer active bg-white border border-amber-200 rounded-2xl flex flex-row"><div class="ai-q-box"><h4 class="font-bold text-[10px] text-amber-800 uppercase mb-2">1. 擁抱脆弱</h4></div><div class="user-a-box"><div id="layer-text-0" class="text-[13px] font-bold whitespace-pre-wrap break-words">等待輸入...</div><div id="layer-analysis-0" class="hidden mt-3 pt-3 border-t text-[12px] text-amber-800 whitespace-pre-wrap break-words"></div></div></div>
+            <div id="layer-1" class="visual-layer bg-white border border-orange-200 rounded-2xl flex flex-row"><div class="ai-q-box bg-orange-50 border-orange-200"><h4 class="font-bold text-[10px] text-orange-800 uppercase mb-2">2. 內在百寶箱</h4></div><div class="user-a-box"><div id="layer-text-1" class="text-[13px] font-bold italic whitespace-pre-wrap break-words">尚未選擇法寶...</div><div id="layer-analysis-1" class="hidden mt-3 pt-3 border-t text-[12px] text-orange-800 whitespace-pre-wrap break-words"></div></div></div>
+            <div id="layer-2" class="visual-layer bg-white border border-red-200 rounded-2xl flex flex-row"><div class="ai-q-box bg-red-50 border-red-200"><h4 class="font-bold text-[10px] text-red-800 uppercase mb-2">3. 教練視角</h4></div><div class="user-a-box"><div id="layer-text-2" class="text-[13px] font-bold italic whitespace-pre-wrap break-words">尚未切換視角...</div><div id="layer-analysis-2" class="hidden mt-3 pt-3 border-t text-[12px] text-red-800 whitespace-pre-wrap break-words"></div></div></div>
+            <div id="layer-3" class="visual-layer bg-slate-900 border border-slate-800 rounded-3xl flex flex-row mt-4 mb-8"><div class="ai-q-box bg-slate-800"><h4 class="font-bold text-[11px] text-amber-400 uppercase mb-2">4. 真心話劇本</h4></div><div class="user-a-box p-6"><div id="layer-text-3" class="text-[15px] text-amber-50 font-bold italic whitespace-pre-wrap break-words">準備預演未來...</div><div id="layer-analysis-3" class="hidden mt-4 pt-4 border-t border-slate-700 text-[13px] text-amber-200 whitespace-pre-wrap break-words"></div></div></div>
         </div>
     </section>
 </main>
 
+<!-- 💡 共用 Modal 群 -->
 <div id="custom-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform border-t-8 border-amber-600 mx-4">
         <h3 class="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2"><span id="modal-icon">💡</span><span id="modal-title">提示</span></h3>
         <p class="text-sm text-slate-600 mb-6 whitespace-pre-wrap leading-relaxed" id="modal-desc"></p>
         <div class="flex justify-end"><button onclick="closeModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-full font-bold">了解</button></div>
+    </div>
+</div>
+
+<div id="welcome-modal" class="hidden modal-overlay no-print z-[120]">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-amber-500 mx-4 relative overflow-hidden">
+        <div class="text-center mb-6 relative z-10">
+            <span class="text-5xl mb-2 block">🎉</span>
+            <h3 class="text-2xl font-black text-slate-800">歡迎來到 InnerSpace</h3>
+        </div>
+        <div class="space-y-4 text-sm text-slate-600 font-medium relative z-10">
+            <p class="text-center">我們已為您的帳戶注入了 <strong class="text-amber-600 text-lg">30,000</strong> 點新手體驗 Tokens！</p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-2">💡 新手指南：</h4>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>一次完整的對話約消耗 <strong class="text-amber-600">8,000 ~ 12,000</strong> Tokens。</li>
+                    <li>您的額度足夠免費體驗約 <strong class="text-amber-600">2~3</strong> 次完整深度分析。</li>
+                    <li>系統具備「溫柔機制」，即使中途點數透支，也絕不會打斷您當次的探索對話。</li>
+                </ul>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-2">準備好開始您的內在探索之旅了嗎？</p>
+        </div>
+        <div class="mt-6 flex justify-center relative z-10">
+            <button onclick="closeWelcomeModal()" class="w-full bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-all text-base">開始探索</button>
+        </div>
+    </div>
+</div>
+
+<div id="recharge-modal" class="hidden modal-overlay no-print z-[110]">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-t-8 border-amber-600 mx-4 relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mr-6 -mt-6 text-amber-100 opacity-30 text-9xl pointer-events-none">💎</div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2 relative z-10" id="recharge-title">儲值中心</h3>
+        <p class="text-slate-600 mb-6 font-medium text-sm relative z-10" id="recharge-desc">為您的心靈帳戶儲備能量。請選擇適合您的加值方案：</p>
+        
+        <div class="space-y-3 mb-6 relative z-10">
+            <div class="border-2 border-stone-200 hover:border-amber-500 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center group bg-white">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-base group-hover:text-amber-700">基礎探索包</h4>
+                    <p class="text-xs text-slate-500">10,000 Tokens (約 1 次完整分析)</p>
+                </div>
+                <div class="text-lg font-black text-amber-600">NT$ 30</div>
+            </div>
+            <div class="border-2 border-orange-400 bg-orange-50 rounded-2xl p-4 cursor-pointer transition-all flex justify-between items-center relative shadow-md">
+                <span class="absolute -top-3 left-4 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">最熱銷</span>
+                <div>
+                    <h4 class="font-bold text-orange-900 text-base">深度覺察包</h4>
+                    <p class="text-xs text-orange-700/80">50,000 Tokens + 贈 5,000</p>
+                </div>
+                <div class="text-lg font-black text-orange-600">NT$ 150</div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6 relative z-10">
+            <button onclick="closeRechargeModal()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-5 py-2.5 rounded-full font-bold text-sm">稍後再說</button>
+            <button onclick="window.simulatePayment()" class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-full font-bold shadow-md transition-all text-sm flex items-center gap-2">
+                💳 前往結帳
+            </button>
+        </div>
+        <p class="text-center text-[10px] text-slate-400 mt-4 relative z-10">【測試階段】點擊結帳將自動模擬付款，為您免費加值。</p>
     </div>
 </div>
 
@@ -121,9 +206,35 @@ let currentStep = 0; let chatHistory = []; let toolLocked = false; let sessionTo
 let discoveredYearning = localStorage.getItem('satir_discovered_yearning') || ""; let originalEvent = localStorage.getItem('satir_event_context') || "未提供具體事件";
 let chatContainer, userInputArea, sendBtn, pdfBtn, stepIndicator, completionMsg, inputWrapper, directEntryArea, directInput;
 
+// Firebase 全域變數
+let currentUserUid = null;
+let currentTokens = 0;
+let updateFirestoreTokens = null; 
+let triggerGoogleLogin = null;
+
 function showModal(title, desc, icon = '💡') { document.getElementById('modal-icon').innerText = icon; document.getElementById('modal-title').innerText = title; document.getElementById('modal-desc').innerText = desc; const modal = document.getElementById('custom-modal'); modal.classList.remove('hidden'); setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10); }
 function closeModal() { const modal = document.getElementById('custom-modal'); modal.firstElementChild.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 200); }
-function showTokenUsage() { showModal('使用量', `📊 Token: ${sessionTokenCount}`, '💰'); }
+
+function showRechargeModal(isForced = false, customMsg = null) { 
+    const title = document.getElementById('recharge-title');
+    const desc = document.getElementById('recharge-desc');
+    if (isForced) {
+        title.innerText = "點數不足";
+        desc.innerHTML = customMsg ? customMsg : "您的體驗點數已透支。為了提供最完整的深度分析，請選擇適合您的方案：";
+    } else {
+        title.innerText = "儲值中心";
+        desc.innerHTML = "為您的心靈帳戶儲備能量。請選擇適合您的加值方案：";
+    }
+    document.getElementById('recharge-modal').classList.remove('hidden'); 
+}
+function closeRechargeModal() { document.getElementById('recharge-modal').classList.add('hidden'); }
+
+function showWelcomeModal() { document.getElementById('welcome-modal').classList.remove('hidden'); }
+function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
+
+function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+}
 
 window.showToolInfo = function(name) { if(!toolLocked) document.getElementById('tool-info-box').innerHTML = TOOLS_INFO[name]; };
 window.hideToolInfo = function() { if(!toolLocked) document.getElementById('tool-info-box').innerHTML = '💡 將滑鼠移至上方百寶箱法寶查看用途。'; };
@@ -132,6 +243,12 @@ window.selectTool = function(toolName) { if (toolLocked) return; if (!userInputA
 async function callGemini(userMessage) {
     let proxyUrl = localStorage.getItem('SATIR_PROXY_URL') || DEFAULT_PROXY_URL;
     if (proxyUrl.startsWith('http') && !proxyUrl.includes('/api/chat')) proxyUrl = proxyUrl.endsWith('/') ? proxyUrl + 'api/chat' : proxyUrl + '/api/chat';
+
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+    if (isLocalhost && proxyUrl === "/api/chat") {
+        showModal("需要連線至 Vercel 伺服器", "您目前正在自己的電腦上預覽網頁，但電腦裡沒有大腦 (API 後端)，所以會發生 404 錯誤！\n\n請直接前往您發布好的 Vercel 正式網址測試。", "🚧");
+        return "❌ 系統阻擋：請至 Vercel 正式網址進行測試。";
+    }
 
     const stageGoal = [
         `▶ 第一步：擁抱脆弱。引導對話：「想像你內心渴望【${discoveredYearning}】的自己站在面前。你會對他說句什麼充滿保證的話？」`,
@@ -144,37 +261,77 @@ async function callGemini(userMessage) {
 
     const systemInstruction = `你是內在煉金教練。不使用專有名詞。
 事件：【${originalEvent}】 渴望：【${discoveredYearning}】
-1. 字數限制 200 字以內。
-2. 防呆 UX：若使用者回答「不知道」，你必須主動給出 A、B 兩個選項讓他選，此時不可輸出 [STEP_COMPLETE]。
+【核心規則】
+1. 絕對不可截斷：請『絕對』要將整句話完整說完，以句號或問號作結，千萬不可中斷句子！無需在乎字數限制。
+2. 拯救不知道：若使用者回答「不知道」，請給出 2 個選項讓他選，並以問句結束，『絕對不可』輸出過關標記。
+3. 禁用 Markdown：絕對不要使用星號 (**) 等格式符號。
 ${stageGoal}
 ${nextStepInstruction}
 繁體中文。`;
 
     const context = chatHistory.slice(-4).map(h => ({ role: h.role === 'coach' ? 'model' : 'user', parts: [{ text: h.text }] }));
-    try {
-        const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction, mode: 'ALCHEMY' }) });
-        if (res.ok) { const data = await res.json(); if(data.tokenUsage) sessionTokenCount += data.tokenUsage.totalTokenCount; return data.text; }
-        else { if (res.status === 429) return "⚠️ 【API 額度耗盡 429】\n\n模擬過關。教練回饋：非常有力量！ [STEP_COMPLETE]"; return `❌ 異常 (HTTP ${res.status})`; }
-    } catch (err) { return `❌ 連線失敗: ${err.message}`; }
+    
+    const retryDelays = [1000, 2000, 4000, 8000, 16000];
+    const maxRetries = retryDelays.length;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const res = await fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: context, systemInstruction, mode: 'ALCHEMY' }) });
+            if (res.ok) { 
+                const data = await res.json(); 
+                if (data.backendVersion !== "v10") {
+                    showModal("⚠️ Vercel 伺服器更新失敗", "系統偵測到您的 Vercel 伺服器還卡在舊版！請前往 Vercel 後台點擊 Redeploy 強制重新部署！", "👻");
+                    return "❌ 系統阻擋：請先修復 Vercel 部署問題。";
+                }
+                if(data.tokenUsage && currentUserUid && updateFirestoreTokens) {
+                    await updateFirestoreTokens(data.tokenUsage.totalTokenCount);
+                }
+                return data.text; 
+            } else { 
+                if ((res.status === 503 || res.status === 429) && attempt < maxRetries) { await new Promise(resolve => setTimeout(resolve, retryDelays[attempt])); continue; }
+                const errorText = await res.text();
+                let errorMessage = `HTTP ${res.status}`;
+                try { const errorJson = JSON.parse(errorText); if (errorJson.error) errorMessage += ` - ${errorJson.error.message || errorJson.error}`; } catch (e) { errorMessage += ` - ${errorText.substring(0, 50)}...`; }
+                if (res.status === 429) return "⚠️ 【系統提示：目前使用人數過多，請稍後再試！】\n\n系統已自動重試但仍忙碌中，請等候一分鐘後再送出。";
+                if (res.status === 503) return "⚠️ 【系統提示：AI 伺服器目前超載 (503)】\n\nGoogle AI 伺服器正經歷短暫的高流量，請稍等幾分鐘後再試一次！";
+                return `❌ 異常 (${errorMessage})`; 
+            }
+        } catch (err) { 
+            if (attempt < maxRetries) { await new Promise(resolve => setTimeout(resolve, retryDelays[attempt])); continue; }
+            return `❌ 連線失敗: ${err.message}`; 
+        }
+    }
 }
 
 function createMessage(text, isUser) {
     const w = document.createElement('div'); w.className = `flex w-full chat-bubble-enter ${isUser ? 'justify-end' : 'justify-start'}`;
     const b = document.createElement('div'); b.className = `max-w-[90%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-amber-700 text-white rounded-tr-none' : 'bg-white border border-amber-200 text-slate-800 rounded-tl-none'}`;
     if (!isUser) b.innerHTML = `<div class="text-[9px] font-bold text-amber-600 mb-1 uppercase tracking-widest">教練</div>`;
-    const c = document.createElement('div'); c.className = 'whitespace-pre-wrap leading-relaxed text-[14px]'; c.textContent = text;
+    const c = document.createElement('div'); c.className = 'whitespace-pre-wrap break-words leading-relaxed text-[14px]'; c.textContent = text;
     b.appendChild(c); w.appendChild(b); return w;
 }
 
+// 💡 修正：將 HTML Tag 轉化為純文字字串，避免傳入 createMessage 時破壞排版
 function startJourney(yearning, isFromIceberg = false) {
     discoveredYearning = yearning; directEntryArea.classList.add('hidden'); inputWrapper.classList.remove('hidden');
-    let welcome = isFromIceberg ? `<div class="bg-amber-100 p-4 rounded-xl mb-4 text-sm border border-amber-200">冰山渴望分析：『${discoveredYearning}』</div>` : `確認了您的核心渴望是：【${discoveredYearning}】。\n\n`;
+    let welcome = isFromIceberg ? `【延續第一階段的發現】\n教練確認了您的核心渴望是：『${discoveredYearning}』\n\n` : `確認了您的核心渴望是：【${discoveredYearning}】。\n\n`;
     welcome += `現在開始第一步：擁抱脆弱。請想像你內心『渴望【${discoveredYearning}】的自己』站在面前。你會對他說一句什麼樣『充滿保證與力量』的話？`;
     chatContainer.appendChild(createMessage(welcome, false)); chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 async function handleSend() {
     const input = userInputArea.value.trim(); if (!input) return;
+
+    // 💡 商業化防線升級
+    if (!currentUserUid) {
+        showModal("需要登入以解鎖分析", "請登入您的 Google 帳號，以保存這份珍貴的分析紀錄，並領取 30,000 點免費新手體驗點數！", "🔒");
+        return; 
+    }
+    if (currentStep === 0 && currentTokens <= 0) {
+        showRechargeModal(true);
+        return; 
+    }
+
     chatContainer.appendChild(createMessage(input, true)); chatHistory.push({ role: "user", text: input });
     userInputArea.value = ''; userInputArea.disabled = true; sendBtn.disabled = true;
     const typing = document.createElement('div'); typing.id = 'typing-indicator'; typing.className = 'flex justify-start chat-bubble-enter'; typing.innerHTML = `<div class="bg-white border border-amber-200 p-3 rounded-xl"><div class="text-[10px] text-amber-600 italic">引導中...</div></div>`;
@@ -185,14 +342,14 @@ async function handleSend() {
     const isComplete = coachResponse.includes("[STEP_COMPLETE]"); const cleanResponse = coachResponse.replace("[STEP_COMPLETE]", "").trim();
     chatContainer.appendChild(createMessage(cleanResponse, false)); chatHistory.push({ role: "coach", text: cleanResponse });
 
-    if (coachResponse.includes("❌")) { userInputArea.disabled = false; sendBtn.disabled = false; return; }
+    if (coachResponse.includes("❌") || coachResponse.includes("⚠️")) { userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus(); return; }
 
     if (isComplete) {
         if (currentStep === 1) { toolLocked = true; document.querySelectorAll('.tool-card').forEach(c => c.classList.add('locked')); document.getElementById('tool-info-box').innerHTML = '🔒 法寶已選定。'; }
         const layerEl = document.getElementById(`layer-${currentStep}`); const textEl = document.getElementById(`layer-text-${currentStep}`); const analysisEl = document.getElementById(`layer-analysis-${currentStep}`);
         if(layerEl && textEl && analysisEl) {
             layerEl.classList.add('active'); textEl.textContent = input; textEl.classList.remove('italic');
-            analysisEl.innerHTML = `<span class="font-bold border-b pb-0.5 inline-block mb-1">教練回饋：</span><br>${cleanResponse}`; analysisEl.classList.remove('hidden');
+            analysisEl.innerHTML = `<span class="font-bold border-b pb-0.5 inline-block mb-1">教練回饋：</span><br>${escapeHTML(cleanResponse)}`; analysisEl.classList.remove('hidden');
         }
         currentStep++;
         if (currentStep < STAGES.length) { stepIndicator.textContent = `Step ${currentStep + 1} / ${STAGES.length}`; userInputArea.disabled = false; sendBtn.disabled = false; userInputArea.focus(); }
@@ -203,7 +360,17 @@ async function handleSend() {
 
 document.addEventListener('DOMContentLoaded', () => {
     chatContainer = document.getElementById('chat-container'); userInputArea = document.getElementById('user-input'); sendBtn = document.getElementById('btn-send'); pdfBtn = document.getElementById('btn-pdf'); stepIndicator = document.getElementById('step-indicator'); completionMsg = document.getElementById('completion-msg'); inputWrapper = document.getElementById('input-area'); directEntryArea = document.getElementById('direct-entry-area'); directInput = document.getElementById('direct-yearning-input');
-    pdfBtn.onclick = () => window.print(); sendBtn.onclick = handleSend; userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+    
+    // 💡 商業化升級：攔截 PDF 匯出事件
+    pdfBtn.onclick = () => {
+        if (currentTokens <= 0) {
+            showRechargeModal(true, "<span class='text-red-500 font-bold'>【專屬腳本已鎖定】</span><br>您的體驗點數已透支。請先儲值以解鎖「匯出煉金報告」功能，完整保存您專屬的行動腳本！");
+        } else {
+            window.print();
+        }
+    };
+    
+    sendBtn.onclick = handleSend; userInputArea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
 
     if (localStorage.getItem('satir_phase1_completed') === 'true' && discoveredYearning) { startJourney(discoveredYearning, true); }
     else {
@@ -218,11 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<!-- ================= Firebase Auth & Firestore 整合 ================= -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+    // TODO: 請替換為您的 Firebase Config
+    const firebaseConfig = {
   apiKey: "AIzaSyCVUQRXSsmSqHriQNqRMRr7LjrRBSUhAhM",
   authDomain: "satir-iceberg.vercel.app",
   projectId: "satiriceberg-c1edd",
@@ -230,15 +400,109 @@ const firebaseConfig = {
   messagingSenderId: "1095208613783",
   appId: "1:1095208613783:web:698bddaed121b2aeb7b6d2",
   measurementId: "G-TYTJP45Q94"
-};   
-    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const provider = new GoogleAuthProvider();
-    const authBtn = document.getElementById('auth-btn'); const userInfo = document.getElementById('user-info');
-    onAuthStateChanged(auth, (user) => {
-        if (user) { userInfo.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full"><span class="text-xs font-bold text-amber-800">${user.displayName}</span>`; authBtn.innerHTML = `登出`; authBtn.classList.replace('text-amber-700', 'text-red-500'); authBtn.onclick = () => signOut(auth); }
-        else { userInfo.innerHTML = ''; authBtn.innerHTML = `登入`; authBtn.classList.replace('text-red-500', 'text-amber-700'); authBtn.onclick = async () => { try { await signInWithPopup(auth, provider); } catch (e) {} }; }
+};
+    
+    const app = initializeApp(firebaseConfig); 
+    const auth = getAuth(app); 
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+    
+    const authBtn = document.getElementById('auth-btn'); 
+    const userInfo = document.getElementById('user-info');
+    const walletBadge = document.getElementById('wallet-badge');
+    const tokenBalanceDisplay = document.getElementById('token-balance');
+    let unsubscribeSnapshot = null;
+
+    triggerGoogleLogin = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); } };
+
+    updateFirestoreTokens = async (usedTokens) => {
+        if(!currentUserUid) return;
+        const userRef = doc(db, "users", currentUserUid);
+        await updateDoc(userRef, { 
+            tokens: increment(-usedTokens),
+            totalTokensUsed: increment(usedTokens)
+        });
+    };
+
+    window.simulatePayment = async () => {
+        if(!currentUserUid) return;
+        try {
+            const userRef = doc(db, "users", currentUserUid);
+            await updateDoc(userRef, { tokens: increment(50000) });
+            alert("💳 【金流測試模式】\n模擬結帳成功！已自動為您加值 50,000 Tokens。");
+            closeRechargeModal();
+        } catch(e) { console.error("加值失敗", e); }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUserUid = user.uid;
+            
+            const photoUrl = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+            const displayName = user.displayName || user.email.split('@')[0];
+
+            userInfo.innerHTML = `<img src="${photoUrl}" class="w-6 h-6 rounded-full border border-amber-200"><span class="text-xs font-bold text-amber-900">${displayName}</span>`;
+            
+            authBtn.innerText = `登出`; 
+            authBtn.classList.remove('text-amber-700'); 
+            authBtn.classList.add('text-red-500'); 
+            authBtn.onclick = () => signOut(auth);
+            
+            walletBadge.classList.remove('hidden');
+            walletBadge.classList.add('flex');
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    name: displayName,
+                    email: user.email,
+                    tokens: 30000,
+                    totalTokensUsed: 0,
+                    createdAt: new Date()
+                });
+                showWelcomeModal();
+            }
+
+            unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentTokens = docSnap.data().tokens;
+                    tokenBalanceDisplay.innerText = currentTokens.toLocaleString();
+                    
+                    if(currentTokens < 500) {
+                        tokenBalanceDisplay.classList.replace('text-amber-600', 'text-red-500');
+                    } else {
+                        tokenBalanceDisplay.classList.replace('text-red-500', 'text-amber-600');
+                    }
+
+                    // 💡 防呆檢查：當餘額為正時，清除透支提示文字
+                    if (currentStep === 0) {
+                        const inputElement = userInputArea || directInput;
+                        if (currentTokens <= 0) {
+                            inputElement.placeholder = "⚠️ 點數已透支，請點擊右上方餘額按鈕進行儲值...";
+                        } else {
+                            inputElement.placeholder = inputElement.id === 'user-input' ? "請輸入... (不知道可直說)" : "例如：我很怕被拋棄...";
+                        }
+                    }
+                }
+            });
+
+        } else {
+            currentUserUid = null;
+            currentTokens = 0;
+            if(unsubscribeSnapshot) unsubscribeSnapshot(); 
+            
+            userInfo.innerHTML = ''; 
+            walletBadge.classList.add('hidden');
+            walletBadge.classList.remove('flex');
+            
+            authBtn.innerText = `登入`; 
+            authBtn.classList.remove('text-red-500');
+            authBtn.classList.add('text-amber-700');
+            authBtn.onclick = triggerGoogleLogin;
+        }
     });
 </script>
 </body>
 </html>
-
-
